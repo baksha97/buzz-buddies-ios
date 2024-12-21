@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0B4AF0CF2D176C460033C3C8 /* SwiftNavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 0B4AF0CE2D176C460033C3C8 /* SwiftNavigation */; };
+		0B4AF0D12D176C460033C3C8 /* SwiftUINavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 0B4AF0D02D176C460033C3C8 /* SwiftUINavigation */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		0BDF18692D171F7D006CEAB0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +57,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B4AF0D12D176C460033C3C8 /* SwiftUINavigation in Frameworks */,
+				0B4AF0CF2D176C460033C3C8 /* SwiftNavigation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +119,8 @@
 			);
 			name = Buzz;
 			packageProductDependencies = (
+				0B4AF0CE2D176C460033C3C8 /* SwiftNavigation */,
+				0B4AF0D02D176C460033C3C8 /* SwiftUINavigation */,
 			);
 			productName = Buzz;
 			productReference = 0BDF18572D171F7C006CEAB0 /* Buzz.app */;
@@ -195,6 +204,9 @@
 			);
 			mainGroup = 0BDF184E2D171F7C006CEAB0;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0B4AF0CD2D176C460033C3C8 /* XCRemoteSwiftPackageReference "swift-navigation" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0BDF18582D171F7C006CEAB0 /* Products */;
 			projectDirPath = "";
@@ -327,6 +339,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -380,6 +393,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
@@ -416,7 +430,7 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				XROS_DEPLOYMENT_TARGET = 2.2;
 			};
@@ -455,7 +469,7 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				XROS_DEPLOYMENT_TARGET = 2.2;
 			};
@@ -591,6 +605,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0B4AF0CD2D176C460033C3C8 /* XCRemoteSwiftPackageReference "swift-navigation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-navigation";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.2.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0B4AF0CE2D176C460033C3C8 /* SwiftNavigation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0B4AF0CD2D176C460033C3C8 /* XCRemoteSwiftPackageReference "swift-navigation" */;
+			productName = SwiftNavigation;
+		};
+		0B4AF0D02D176C460033C3C8 /* SwiftUINavigation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0B4AF0CD2D176C460033C3C8 /* XCRemoteSwiftPackageReference "swift-navigation" */;
+			productName = SwiftUINavigation;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0BDF184F2D171F7C006CEAB0 /* Project object */;
 }

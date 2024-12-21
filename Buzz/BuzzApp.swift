@@ -1,17 +1,15 @@
-//
-//  BuzzApp.swift
-//  Buzz
-//
-//  Created by Travis Baksh on 12/21/24.
-//
-
+import ComposableArchitecture
 import SwiftUI
 
 @main
 struct BuzzApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
+  
+  var body: some Scene {
+    WindowGroup {
+      AppRootView()
     }
+    .modelContainer(for: Client.self)
+    .modelContainer(for: Reward.self)
+  }
 }
+
