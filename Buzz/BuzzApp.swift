@@ -14,7 +14,7 @@ struct BuzzApp: App {
   
       var body: some Scene {
           WindowGroup {
-              ClientRewardTestView(viewModel: ClientRewardTestView.ViewModel(dataService: SwiftDataService(modelContext: container.mainContext)))
+              ClientListView(viewModel: ClientListView.ViewModel(dataService: SwiftDataService(modelContext: container.mainContext)))
           }
           .modelContainer(container)
       }

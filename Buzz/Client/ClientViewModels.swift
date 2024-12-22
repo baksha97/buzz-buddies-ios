@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - View Models
 
-extension ClientRewardTestView {
+extension ClientListView {
     @Observable
     class ViewModel {
         private(set) var dataService: ClientDataService
