@@ -2,42 +2,37 @@ import SwiftUI
 import SwiftData
 @main
 struct BuzzApp: App {
-      let container: ModelContainer
+  let container: ModelContainer
   
-      init() {
-          do {
-              container = try ModelContainer(for: Client.self, Reward.self)
-          } catch {
-              fatalError("Failed to create ModelContainer for Client and Reward.")
-          }
-      }
+  init() {
+    do {
+      container = try ModelContainer(for: Client.self, Reward.self)
+    } catch {
+      fatalError("Failed to create ModelContainer for Client and Reward.")
+    }
+  }
   
-      var body: some Scene {
-          WindowGroup {
-              ClientListView(viewModel: ClientListView.ViewModel(dataService: SwiftDataService(modelContext: container.mainContext)))
-          }
-          .modelContainer(container)
-      }
+  var body: some Scene {
+    WindowGroup {
+      RootView(container: container)
+    }
+    .modelContainer(container)
+  }
 }
 
-// MARK: - App
-//
-//@main
-//struct ClientRewardTestApp: App {
-//    let container: ModelContainer
-//
-//    init() {
-//        do {
-//            container = try ModelContainer(for: Client.self, Reward.self)
-//        } catch {
-//            fatalError("Failed to create ModelContainer for Client and Reward.")
-//        }
-//    }
-//
-//    var body: some Scene {
-//        WindowGroup {
-//            ClientRewardTestView(viewModel: ClientRewardTestView.ViewModel(dataService: SwiftDataService(modelContext: container.mainContext)))
-//        }
-//        .modelContainer(container)
-//    }
-//}
+struct RootView: View {
+  
+  let container: ModelContainer
+  var body: some View {
+    TabView {
+      ClientListView(viewModel: ClientListView.ViewModel(dataService: SwiftDataService(modelContext: container.mainContext)))
+        .tabItem {
+          Label("List", systemImage: "list.dash")
+        }
+      ContactsView()
+        .tabItem {
+          Label("Contacts", systemImage: "person.fill")
+        }
+    }
+  }
+}

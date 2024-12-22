@@ -1,4 +1,5 @@
 import Foundation
+import Dependencies
 
 // MARK: - View Models
 
