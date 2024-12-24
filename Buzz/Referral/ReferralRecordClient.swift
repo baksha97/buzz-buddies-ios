@@ -8,11 +8,11 @@ import DependenciesMacros
 public struct ReferralRecordClient: Sendable {
   //  public var setupDatabase: @Sendable () throws -> Void
   public var createRecord: @Sendable (_ referral: ReferralRecord) async throws -> Void
-  public var fetchReferral: @Sendable (_ contactUUID: UUID) async throws -> ReferralRecord?
+  public var fetchRecord: @Sendable (_ contactUUID: UUID) async throws -> ReferralRecord?
   public var fetchReferrer: @Sendable (_ contactUUID: UUID) async throws -> ReferralRecord?
   public var fetchReferredContacts: @Sendable (_ contactUUID: UUID) async throws -> [ReferralRecord]
   public var fetchReferralWithRelationships: @Sendable (_ contactUUID: UUID) async throws -> (ReferralRecord?, [ReferralRecord])
-  public var deleteDatabase: @Sendable () throws -> Void
+  public var deleteDatabase: @Sendable () async throws -> Void
   
   
   public enum Failure: Error, Equatable {
@@ -58,7 +58,7 @@ private extension ReferralRecordClient {
           try referral.insert(db)
         }
       },
-      fetchReferral: { contactUUID in
+      fetchRecord: { contactUUID in
         try await dbQueue.read { db in
           try ReferralRecord
             .filter(ReferralRecord.Columns.contactUUID == contactUUID)
@@ -101,14 +101,7 @@ private extension ReferralRecordClient {
         }
       },
       deleteDatabase: {
-        let fileManager = FileManager.default
-        guard fileManager.fileExists(atPath: dbPath) else { return }
-        do {
-          try dbQueue.close()
-          try fileManager.removeItem(atPath: dbPath)
-        } catch {
-          throw Failure.deleteFailed
-        }
+        try await dbQueue.erase()
       }
     )
   }

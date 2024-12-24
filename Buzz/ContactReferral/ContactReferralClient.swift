@@ -28,7 +28,7 @@ extension ContactReferralClient {
         
         // 1) Make sure person referring has a record, otherwise create it
         if let referrer = referredBy,
-         try await referralRecordClient.fetchReferral(referrer.id) == nil {
+         try await referralRecordClient.fetchRecord(referrer.id) == nil {
          let referrerReferral = ReferralRecord(contactUUID: referrer.id)
          try await referralRecordClient.createRecord(referrerReferral)
         }

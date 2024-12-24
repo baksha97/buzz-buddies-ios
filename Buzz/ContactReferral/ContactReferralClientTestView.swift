@@ -116,7 +116,7 @@ struct ContactReferralView: View {
             Button("Delete Database") {
               Task {
                 do {
-                  try referralRecordClient.deleteDatabase()
+                  try await referralRecordClient.deleteDatabase()
                 } catch {
                   let message = "Failed to Delete Database"
                   print("Error: \(message)")
