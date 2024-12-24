@@ -1,5 +1,5 @@
 {
-  "originHash" : "2e09c0cf6ef4abed1a98f761cdbf82c4ad0c633ff491acfe3106f8481762a5c2",
+  "originHash" : "461c185800c0e048b813b68ca0e438e134b20d2b21269b953fae6f671e7e57e9",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "9fa31f4403da54855f1e2aeaeff478f4f0e40b13",
         "version" : "1.0.2"
+      }
+    },
+    {
+      "identity" : "grdb.swift?tab=readme-ov-file#installation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/groue/GRDB.swift?tab=readme-ov-file#installation",
+      "state" : {
+        "branch" : "master",
+        "revision" : "3ecb5c54553559217592d21a6d9841becb891b38"
       }
     },
     {

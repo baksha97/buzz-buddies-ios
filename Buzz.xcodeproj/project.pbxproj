@@ -12,6 +12,7 @@
 		1F3B0F9F2D17B1AB001BFA2F /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3B0F9E2D17B1AB001BFA2F /* Dependencies */; };
 		1F3B0FA12D17B1AB001BFA2F /* DependenciesMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3B0FA02D17B1AB001BFA2F /* DependenciesMacros */; };
 		1F3B0FA32D17B1AB001BFA2F /* DependenciesTestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3B0FA22D17B1AB001BFA2F /* DependenciesTestSupport */; };
+		1F3CAF2F2D1B1C0900444831 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3CAF2E2D1B1C0900444831 /* GRDB */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +62,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F3B0F9F2D17B1AB001BFA2F /* Dependencies in Frameworks */,
+				1F3CAF2F2D1B1C0900444831 /* GRDB in Frameworks */,
 				0B4AF0D12D176C460033C3C8 /* SwiftUINavigation in Frameworks */,
 				1F3B0FA12D17B1AB001BFA2F /* DependenciesMacros in Frameworks */,
 				0B4AF0CF2D176C460033C3C8 /* SwiftNavigation in Frameworks */,
@@ -129,6 +131,7 @@
 				0B4AF0D02D176C460033C3C8 /* SwiftUINavigation */,
 				1F3B0F9E2D17B1AB001BFA2F /* Dependencies */,
 				1F3B0FA02D17B1AB001BFA2F /* DependenciesMacros */,
+				1F3CAF2E2D1B1C0900444831 /* GRDB */,
 			);
 			productName = Buzz;
 			productReference = 0BDF18572D171F7C006CEAB0 /* Buzz.app */;
@@ -216,6 +219,7 @@
 			packageReferences = (
 				0B4AF0CD2D176C460033C3C8 /* XCRemoteSwiftPackageReference "swift-navigation" */,
 				1F3B0F9D2D17B1AB001BFA2F /* XCRemoteSwiftPackageReference "swift-dependencies" */,
+				1F3CAF2D2D1B1C0900444831 /* XCRemoteSwiftPackageReference "GRDB" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0BDF18582D171F7C006CEAB0 /* Products */;
@@ -635,6 +639,14 @@
 				minimumVersion = 1.6.2;
 			};
 		};
+		1F3CAF2D2D1B1C0900444831 /* XCRemoteSwiftPackageReference "GRDB" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift?tab=readme-ov-file#installation";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -662,6 +674,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F3B0F9D2D17B1AB001BFA2F /* XCRemoteSwiftPackageReference "swift-dependencies" */;
 			productName = DependenciesTestSupport;
+		};
+		1F3CAF2E2D1B1C0900444831 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F3CAF2D2D1B1C0900444831 /* XCRemoteSwiftPackageReference "GRDB" */;
+			productName = GRDB;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

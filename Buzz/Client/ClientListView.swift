@@ -18,9 +18,7 @@ struct ClientListView: View {
           addClientButton
         }
       }
-      .background(Theme.Colors.background)
     }
-    .themedNavigationView()
     .sheet(isPresented: $viewModel.isAddingClient) {
       AddClientForm(
         name: $viewModel.newClientName,
@@ -41,12 +39,8 @@ struct ClientListView: View {
   private var headerView: some View {
     HStack {
       Text("Clients and Rewards")
-        .font(Theme.Fonts.title)
-        .foregroundColor(Theme.Colors.text)
-      
-      Theme.Images.reward // Use reward emoji
+      Images.reward // Use reward emoji
         .font(.largeTitle)
-        .foregroundColor(Theme.Colors.accent)
     }
     .padding(.bottom)
   }
@@ -55,12 +49,8 @@ struct ClientListView: View {
     VStack(alignment: .leading) {
       HStack {
         Text("Clients")
-          .font(Theme.Fonts.headline)
-          .foregroundColor(Theme.Colors.text)
-        
-        Theme.Images.client
+        Images.client
           .font(.title2)
-          .foregroundColor(Theme.Colors.accent)
       }
       .padding([.horizontal, .top])
       
@@ -69,22 +59,16 @@ struct ClientListView: View {
       }
       .onDelete(perform: viewModel.deleteClients)
     }
-    .background(Theme.Colors.background)
   }
   
   private func clientRow(for client: Client) -> some View {
     NavigationLink(destination: ClientDetailView(viewModel: ClientDetailView.ViewModel(dataService: viewModel.dataService, client: client), onDismiss: viewModel.fetchClients)) {
       HStack {
-        Theme.Images.client
+        Images.client
           .font(.title2)
-          .foregroundColor(Theme.Colors.accent)
-        
         Text(client.name)
-          .font(Theme.Fonts.body)
-          .foregroundColor(Theme.Colors.text)
         Spacer()
         Image(systemName: "chevron.right")
-          .foregroundColor(Theme.Colors.secondary)
       }
       .padding([.horizontal, .bottom])
     }
@@ -96,12 +80,10 @@ struct ClientListView: View {
       viewModel.isAddingClient = true
     } label: {
       HStack {
-        Theme.Images.add
+        Images.add
         Text("Add Client")
       }
     }
-    .buttonStyle(Theme.Styles.borderedProminentButtonStyle)
-    .tint(Theme.Colors.accent)
     .padding(.vertical)
   }
 }

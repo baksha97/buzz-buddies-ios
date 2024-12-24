@@ -31,7 +31,6 @@ struct ClientDetailView: View {
       }
     }
     .padding(.horizontal)
-    .background(Theme.Colors.background)
     .sheet(isPresented: $viewModel.isAddingReward) {
       AddRewardForm(
         notes: $viewModel.newRewardNotes,
@@ -49,22 +48,16 @@ struct ClientDetailView: View {
   private var clientInfo: some View {
     VStack {
       HStack {
-        Theme.Images.phone
+        Images.phone
         Text("Phone: \(viewModel.client.phoneNumber)")
-          .font(Theme.Fonts.body)
-          .foregroundColor(Theme.Colors.text)
       }
       HStack {
-        Theme.Images.referredBy
+        Images.referredBy
         Text("Referred by: \(viewModel.client.referredBy?.name ?? "None")")
-          .font(Theme.Fonts.body)
-          .foregroundColor(Theme.Colors.text)
       }
       HStack {
-        Theme.Images.referred
+        Images.referred
         Text("Referred: \(viewModel.client.referred.map { $0.name }.joined(separator: ", "))")
-          .font(Theme.Fonts.body)
-          .foregroundColor(Theme.Colors.text)
       }
     }
   }
@@ -73,12 +66,8 @@ struct ClientDetailView: View {
     VStack(alignment: .leading) {
       HStack {
         Text("Rewards")
-          .font(Theme.Fonts.headline)
-          .foregroundColor(Theme.Colors.text)
-        
-        Theme.Images.reward // Use reward emoji
+        Images.reward // Use reward emoji
           .font(.title2)
-          .foregroundColor(Theme.Colors.accent)
       }
       .padding([.horizontal, .top])
       
@@ -87,20 +76,15 @@ struct ClientDetailView: View {
       }
       .onDelete(perform: viewModel.deleteRewards)
     }
-    .background(Theme.Colors.background)
   }
   
   private func rewardRow(for reward: Reward) -> some View {
     VStack(alignment: .leading) {
       HStack {
-        Theme.Images.notes
+        Images.notes
         Text("Notes: \(reward.notes)")
-          .font(Theme.Fonts.body)
-          .foregroundColor(Theme.Colors.text)
       }
       Text("Referrals Consumed: \(reward.referralsConsumed)")
-        .font(Theme.Fonts.caption)
-        .foregroundColor(Theme.Colors.secondary)
     }
     .padding([.horizontal, .bottom])
   }
@@ -110,11 +94,10 @@ struct ClientDetailView: View {
       viewModel.isAddingReward = true
     } label: {
       HStack {
-        Theme.Images.add
+        Images.add
         Text("Add Reward")
       }
     }
-    .buttonStyle(Theme.Styles.borderedProminentButtonStyle)
     .padding(.vertical)
   }
   
@@ -125,12 +108,10 @@ struct ClientDetailView: View {
       dismiss()
     } label: {
       HStack {
-        Theme.Images.delete
+        Images.delete
         Text("Delete Client")
       }
     }
-    .buttonStyle(Theme.Styles.borderedProminentButtonStyle)
-    .accentColor(Theme.Colors.destructive)
     .padding(.vertical)
   }
 }

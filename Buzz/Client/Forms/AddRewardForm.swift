@@ -1,14 +1,9 @@
-//
-//  AddRewardForm.swift
-//  Buzz
-//
-//  Created by Travis Baksh on 12/21/24.
-//
-
-
 import SwiftUI
 
 struct AddRewardForm: View {
+  @Environment(\.theme) private var theme
+  @Environment(\.dismiss) private var dismiss
+  
   @Binding var notes: String
   @Binding var referralsConsumed: Int
   let maxReferrals: Int
@@ -16,43 +11,68 @@ struct AddRewardForm: View {
   
   var body: some View {
     NavigationView {
-      Form {
-        Section {
-          HStack {
-            Theme.Images.notes
-            TextField("Notes", text: $notes)
-              .font(Theme.Fonts.body)
-              .foregroundColor(Theme.Colors.text)
+      VStack(spacing: theme.spacing.lg) {
+        VStack(spacing: theme.spacing.md) {
+          BuzzUI.Text("Notes", style: .headingSmall)
+          
+          BuzzUI.TextField(
+            "Enter notes",
+            text: $notes,
+            icon: Image(systemName: "note.text")
+          )
+        }
+        
+        VStack(spacing: theme.spacing.md) {
+          BuzzUI.Text("Referrals", style: .headingSmall)
+          
+          BuzzUI.Card {
+            VStack(spacing: theme.spacing.sm) {
+              HStack {
+                BuzzUI.Text("Referrals Consumed", style: .bodyLarge)
+                Spacer()
+                BuzzUI.Text("\(referralsConsumed)", style: .bodyLarge)
+              }
+              
+              HStack(spacing: theme.spacing.md) {
+                BuzzUI.Button("−", style: .secondary) {
+                  if referralsConsumed > 0 {
+                    referralsConsumed -= 1
+                  }
+                }
+                .disabled(referralsConsumed <= 0)
+                
+                BuzzUI.Button("+", style: .secondary) {
+                  if referralsConsumed < maxReferrals {
+                    referralsConsumed += 1
+                  }
+                }
+                .disabled(referralsConsumed >= maxReferrals)
+              }
+            }
           }
         }
         
-        Section {
-          Stepper("Referrals Consumed: \(referralsConsumed)", value: $referralsConsumed, in: 0...maxReferrals)
-            .font(Theme.Fonts.body)
-            .foregroundColor(Theme.Colors.text)
-        }
+        Spacer()
       }
-      .themedForm()
-      .navigationTitle("Add Reward")
+      .padding(theme.spacing.lg)
+      .background(theme.colors.background)
+      .navigationBarTitleDisplayMode(.inline)
       .toolbar {
+        ToolbarItem(placement: .principal) {
+          BuzzUI.Text("Add Reward", style: .headingMedium)
+        }
+        
         ToolbarItem(placement: .cancellationAction) {
-          Button {
+          BuzzUI.Button("Cancel", style: .tertiary) {
             notes = ""
             referralsConsumed = 0
-            onSave()
-          } label: {
-            Text("Cancel")
-              .font(Theme.Fonts.button)
-              .foregroundColor(Theme.Colors.accent)
+            dismiss()
           }
         }
+        
         ToolbarItem(placement: .confirmationAction) {
-          Button {
+          BuzzUI.Button("Save", style: .primary) {
             onSave()
-          } label: {
-            Text("Save")
-              .font(Theme.Fonts.button)
-              .foregroundColor(Theme.Colors.accent)
           }
         }
       }
@@ -60,12 +80,23 @@ struct AddRewardForm: View {
   }
 }
 
-#Preview("AddRewardForm"){
+#Preview("AddRewardForm") {
   AddRewardForm(
     notes: .constant(""),
     referralsConsumed: .constant(0),
     maxReferrals: 3,
     onSave: { }
   )
-  
+  .withTheme(AppTheme.light)
+}
+
+#Preview("AddRewardForm - Dark") {
+  AddRewardForm(
+    notes: .constant(""),
+    referralsConsumed: .constant(0),
+    maxReferrals: 3,
+    onSave: { }
+  )
+  .withTheme(AppTheme.dark)
+  .preferredColorScheme(.dark)
 }

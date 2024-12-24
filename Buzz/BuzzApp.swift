@@ -1,38 +1,41 @@
 import SwiftUI
 import SwiftData
+import Dependencies
+
 @main
 struct BuzzApp: App {
-  let container: ModelContainer
-  
-  init() {
-    do {
-      container = try ModelContainer(for: Client.self, Reward.self)
-    } catch {
-      fatalError("Failed to create ModelContainer for Client and Reward.")
-    }
-  }
-  
   var body: some Scene {
     WindowGroup {
-      RootView(container: container)
+      RootView()
+        .withTheme(AppTheme.dark)
     }
-    .modelContainer(container)
   }
 }
 
 struct RootView: View {
   
-  let container: ModelContainer
+  @Dependency(\.contactsClient.requestAuthorization)
+  private var requestAuthorization
+  
   var body: some View {
     TabView {
-      ClientListView(viewModel: ClientListView.ViewModel(dataService: SwiftDataService(modelContext: container.mainContext)))
+      
+      ContactReferralView()
         .tabItem {
-          Label("List", systemImage: "list.dash")
+          Label("Refs", systemImage: "person.fill")
         }
+      
       ContactsView()
         .tabItem {
           Label("Contacts", systemImage: "person.fill")
         }
+
+    }
+    .task {
+      let hasAuthorizationForContacts = await requestAuthorization()
+      if !hasAuthorizationForContacts {
+        fatalError("Need contacts for app to work :)")
+      }
     }
   }
 }

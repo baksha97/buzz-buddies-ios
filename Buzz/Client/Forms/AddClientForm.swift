@@ -18,32 +18,27 @@ struct AddClientForm: View {
   var body: some View {
     NavigationView {
       Form {
-                      Section("Client Details") { // Add section header
-                          TextField("Name", text: $name)
-                              .font(Theme.Fonts.body)
-                              .foregroundColor(Theme.Colors.text)
-
-                          HStack {
-                              Theme.Images.phone
-                              TextField("Phone", text: $phone)
-                                  .font(Theme.Fonts.body)
-                                  .foregroundColor(Theme.Colors.text)
-                          }
-                      }
-
-                      Section("Referral") { // Add section header
-                          Picker("Referred By", selection: $referrer) {
-                              Text("None")
-                                  .tag(nil as Client?)
-                              ForEach(clients) { client in
-                                  Text(client.name)
-                                      .tag(client as Client?)
-                              }
-                          }
-                      }
-                  }
-                  .themedForm()
-                  .navigationTitle("Add Client")
+        Section("Client Details") { // Add section header
+          TextField("Name", text: $name)
+          
+          HStack {
+            Images.phone
+            TextField("Phone", text: $phone)
+          }
+        }
+        
+        Section("Referral") { // Add section header
+          Picker("Referred By", selection: $referrer) {
+            Text("None")
+              .tag(nil as Client?)
+            ForEach(clients) { client in
+              Text(client.name)
+                .tag(client as Client?)
+            }
+          }
+        }
+      }
+      .navigationTitle("Add Client")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button {
@@ -53,8 +48,6 @@ struct AddClientForm: View {
             onSave()
           } label: {
             Text("Cancel")
-              .font(Theme.Fonts.button)
-              .foregroundColor(Theme.Colors.accent)
           }
         }
         ToolbarItem(placement: .confirmationAction) {
@@ -62,8 +55,6 @@ struct AddClientForm: View {
             onSave()
           } label: {
             Text("Save")
-              .font(Theme.Fonts.button)
-              .foregroundColor(Theme.Colors.accent)
           }
         }
       }

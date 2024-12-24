@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "4448826C-9196-4E81-9FC3-7AB49A16DF0D"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "BAB6254B-DDFD-440E-9C2E-EA08CDB2DDF7"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Buzz/ContactReferral/ContactReferralClient.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "37"
+            endingLineNumber = "37"
+            landmarkName = "makeClient(contactsClient:referralRecordClient:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "BAB6254B-DDFD-440E-9C2E-EA08CDB2DDF7 - 186d7c4e03c2dc37"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for closure #1 @Sendable (Buzz.Contact, Swift.Optional&lt;Buzz.Contact&gt;) async throws -&gt; () in static Buzz.ContactReferralClient.makeClient(contactsClient: Buzz.ContactsClient, referralRecordClient: Buzz.ReferralRecordClient) -&gt; Buzz.ContactReferralClient"
+                  moduleName = "Buzz.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClient.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "29"
+                  endingLineNumber = "29">
+               </Location>
+               <Location
+                  uuid = "BAB6254B-DDFD-440E-9C2E-EA08CDB2DDF7 - 2eeaeba73782a0f7"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(2) await resume partial function for closure #1 @Sendable (Buzz.Contact, Swift.Optional&lt;Buzz.Contact&gt;) async throws -&gt; () in static Buzz.ContactReferralClient.makeClient(contactsClient: Buzz.ContactsClient, referralRecordClient: Buzz.ReferralRecordClient) -&gt; Buzz.ContactReferralClient"
+                  moduleName = "Buzz.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClient.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "29"
+                  endingLineNumber = "29">
+               </Location>
+               <Location
+                  uuid = "BAB6254B-DDFD-440E-9C2E-EA08CDB2DDF7 - e8ff8407787f5433"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for closure #1 @Sendable (Buzz.Contact, Swift.Optional&lt;Buzz.Contact&gt;) async throws -&gt; () in static Buzz.ContactReferralClient.makeClient(contactsClient: Buzz.ContactsClient, referralRecordClient: Buzz.ReferralRecordClient) -&gt; Buzz.ContactReferralClient"
+                  moduleName = "Buzz.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClient.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "29"
+                  endingLineNumber = "29">
+               </Location>
+               <Location
+                  uuid = "BAB6254B-DDFD-440E-9C2E-EA08CDB2DDF7 - 88f8b28a3e14b53e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(10) suspend resume partial function for closure #1 @Sendable (Buzz.Contact, Swift.Optional&lt;Buzz.Contact&gt;) async throws -&gt; () in static Buzz.ContactReferralClient.makeClient(contactsClient: Buzz.ContactsClient, referralRecordClient: Buzz.ReferralRecordClient) -&gt; Buzz.ContactReferralClient"
+                  moduleName = "Buzz.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClient.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "29"
+                  endingLineNumber = "29">
+               </Location>
+               <Location
+                  uuid = "BAB6254B-DDFD-440E-9C2E-EA08CDB2DDF7 - 186d7c4e03c2db0f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for closure #1 @Sendable (Buzz.Contact, Swift.Optional&lt;Buzz.Contact&gt;) async throws -&gt; () in static Buzz.ContactReferralClient.makeClient(contactsClient: Buzz.ContactsClient, referralRecordClient: Buzz.ReferralRecordClient) -&gt; Buzz.ContactReferralClient"
+                  moduleName = "Buzz.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClient.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "37"
+                  endingLineNumber = "37">
+               </Location>
+               <Location
+                  uuid = "BAB6254B-DDFD-440E-9C2E-EA08CDB2DDF7 - e8ff8407787f530b"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for closure #1 @Sendable (Buzz.Contact, Swift.Optional&lt;Buzz.Contact&gt;) async throws -&gt; () in static Buzz.ContactReferralClient.makeClient(contactsClient: Buzz.ContactsClient, referralRecordClient: Buzz.ReferralRecordClient) -&gt; Buzz.ContactReferralClient"
+                  moduleName = "Buzz.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClient.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "37"
+                  endingLineNumber = "37">
+               </Location>
+               <Location
+                  uuid = "BAB6254B-DDFD-440E-9C2E-EA08CDB2DDF7 - bf418cd8b429cb37"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(5) suspend resume partial function for closure #1 @Sendable (Buzz.Contact, Swift.Optional&lt;Buzz.Contact&gt;) async throws -&gt; () in static Buzz.ContactReferralClient.makeClient(contactsClient: Buzz.ContactsClient, referralRecordClient: Buzz.ReferralRecordClient) -&gt; Buzz.ContactReferralClient"
+                  moduleName = "Buzz.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClient.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "37"
+                  endingLineNumber = "37">
+               </Location>
+               <Location
+                  uuid = "BAB6254B-DDFD-440E-9C2E-EA08CDB2DDF7 - 284f927f6c3fdfcb"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(6) await resume partial function for closure #1 @Sendable (Buzz.Contact, Swift.Optional&lt;Buzz.Contact&gt;) async throws -&gt; () in static Buzz.ContactReferralClient.makeClient(contactsClient: Buzz.ContactsClient, referralRecordClient: Buzz.ReferralRecordClient) -&gt; Buzz.ContactReferralClient"
+                  moduleName = "Buzz.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClient.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "37"
+                  endingLineNumber = "37">
+               </Location>
+               <Location
+                  uuid = "BAB6254B-DDFD-440E-9C2E-EA08CDB2DDF7 - fd39491e0da4333"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(7) suspend resume partial function for closure #1 @Sendable (Buzz.Contact, Swift.Optional&lt;Buzz.Contact&gt;) async throws -&gt; () in static Buzz.ContactReferralClient.makeClient(contactsClient: Buzz.ContactsClient, referralRecordClient: Buzz.ReferralRecordClient) -&gt; Buzz.ContactReferralClient"
+                  moduleName = "Buzz.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClient.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "37"
+                  endingLineNumber = "37">
+               </Location>
+               <Location
+                  uuid = "BAB6254B-DDFD-440E-9C2E-EA08CDB2DDF7 - 88f8b28a3e14b206"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(10) suspend resume partial function for closure #1 @Sendable (Buzz.Contact, Swift.Optional&lt;Buzz.Contact&gt;) async throws -&gt; () in static Buzz.ContactReferralClient.makeClient(contactsClient: Buzz.ContactsClient, referralRecordClient: Buzz.ReferralRecordClient) -&gt; Buzz.ContactReferralClient"
+                  moduleName = "Buzz.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClient.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "37"
+                  endingLineNumber = "37">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "57E64CFF-8DC1-4DC1-9289-F97511A97DB9"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Buzz/Referral/ReferralRecordClient.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "55"
+            endingLineNumber = "55"
+            landmarkName = "makeClient(with:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "9D6D76F7-2FBB-43DC-8546-653B1C0750F5"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Buzz/Referral/ReferralRecordClient.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "50"
+            endingLineNumber = "50"
+            landmarkName = "makeClient(with:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "1FBBECDB-7734-4C1C-9C72-D573C8DD4A9E"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Buzz/Referral/ReferralRecordClient.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "58"
+            endingLineNumber = "58"
+            landmarkName = "makeClient(with:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "E573672E-F502-4419-A1FD-B1C66B1CD2B3"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Buzz/Referral/ReferralRecordClient.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "54"
+            endingLineNumber = "54"
+            landmarkName = "makeClient(with:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>
