@@ -1,5 +1,5 @@
 {
-  "originHash" : "461c185800c0e048b813b68ca0e438e134b20d2b21269b953fae6f671e7e57e9",
+  "originHash" : "f9a17d3f801ed0b06406726c7633e36245a14710166c45b6e8412921c57f78b9",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -11,12 +11,11 @@
       }
     },
     {
-      "identity" : "grdb.swift?tab=readme-ov-file#installation",
+      "identity" : "grdb.swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/groue/GRDB.swift?tab=readme-ov-file#installation",
+      "location" : "https://github.com/groue/GRDB.swift",
       "state" : {
-        "branch" : "master",
-        "revision" : "3ecb5c54553559217592d21a6d9841becb891b38"
+        "revision" : "84d25dfc9dc1766feb8c80fb04b9f7e2337fb83e"
       }
     },
     {
@@ -94,10 +93,28 @@
     {
       "identity" : "swift-syntax",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftlang/swift-syntax",
+      "location" : "https://github.com/apple/swift-syntax.git",
       "state" : {
         "revision" : "0687f71944021d616d34d922343dcef086855920",
         "version" : "600.0.1"
+      }
+    },
+    {
+      "identity" : "vcomponents",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/VakhoKontridze/VComponents",
+      "state" : {
+        "revision" : "33e9c3345b34f59fc2a6a3144a3ca2862ba3519e",
+        "version" : "7.2.1"
+      }
+    },
+    {
+      "identity" : "vcore",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/VakhoKontridze/VCore",
+      "state" : {
+        "revision" : "c230a2dc6f741321ad36ce27d270151bafbed631",
+        "version" : "7.2.0"
       }
     },
     {

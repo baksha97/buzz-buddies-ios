@@ -2,171 +2,150 @@ import SwiftUI
 import Dependencies
 
 struct ContactReferralView: View {
-  // MARK: - State Properties
   
+  @Environment(\.theme) private var theme
+  // MARK: - State Properties
   @State private var contacts: [Contact] = []
+  @State private var unreferredContacts: [Contact] = []
   @State private var selectedContact: Contact?
   @State private var selectedReferrer: Contact? = nil
-  
   @State private var referredContacts: [Contact] = []
   @State private var referrer: Contact?
-  
   @State private var errorMessage: String?
   
   @Dependency(\.contactReferralClient) private var contactReferralClient
-  @Dependency(\.contactsClient) private var contactsClient
-  @Dependency(\.referralRecordClient) private var referralRecordClient
   
   // MARK: - Body
-  
   var body: some View {
     NavigationView {
-      VStack(spacing: 20) {
-        Text("Contact Referral System")
-          .font(.largeTitle)
+      VStack(spacing: theme.spacing.lg) {
+        BuzzUI.Text("Contact Referral System", style: .displayLarge)
           .padding()
         
         // MARK: - Contact Picker
-        VStack(alignment: .leading) {
-          Text("Select a Contact:")
-            .font(.headline)
-          Picker("Select Contact", selection: $selectedContact) {
-            Text("None").tag(Optional<Contact>(nil))
-            ForEach(contacts, id: \.id) { contact in
-              Text(contact.fullName).tag(Optional(contact))
-            }
-          }
-          .pickerStyle(.menu)
-        }
-        .padding(.horizontal)
-        
-        // MARK: - Referrer Picker
-        if let selectedContact = selectedContact {
-          VStack(alignment: .leading) {
-            Text("Select Referrer (Optional):")
-              .font(.headline)
-            Picker("Select Referrer", selection: $selectedReferrer) {
+        BuzzUI.Card(style: .elevated) {
+          VStack(alignment: .leading, spacing: theme.spacing.md) {
+            BuzzUI.Text("Select an Unreferred Contact:", style: .headingMedium)
+            Picker("Select Contact", selection: $selectedContact) {
               Text("None").tag(Optional<Contact>(nil))
-              ForEach(contacts.filter { $0.id != selectedContact.id }, id: \.id) { contact in
-                Text(contact.fullName).tag(Optional(contact))
+              ForEach(unreferredContacts, id: \ .id) { contact in
+                Text(contact.fullName).tag(contact)
               }
             }
             .pickerStyle(.menu)
           }
-          .padding(.horizontal)
+        }
+        
+        // MARK: - Referrer Picker
+        if let selectedContact = selectedContact {
+          BuzzUI.Card(style: .elevated) {
+            VStack(alignment: .leading, spacing: theme.spacing.md) {
+              BuzzUI.Text("Select Referrer (Optional):", style: .headingMedium)
+              Picker("Select Referrer", selection: $selectedReferrer) {
+                Text("None").tag(Optional<Contact>(nil))
+                ForEach(contacts.filter { $0.id != selectedContact.id }, id: \ .id) { contact in
+                  Text(contact.fullName).tag(Optional(contact))
+                }
+              }
+              .pickerStyle(.menu)
+            }
+          }
           
-          // MARK: - Actions
-          Button("Create Referral") {
+          BuzzUI.Button("Create Referral", style: .primary) {
             Task {
               do {
                 try await contactReferralClient.createReferral(selectedContact, selectedReferrer)
                 errorMessage = nil
                 fetchReferralDetails()
+                fetchUnreferredContacts()
               } catch ContactReferralClient.Failure.contactAlreadyExistsInReferralRecords {
-                let message = "Contact '\(selectedContact.fullName)' already exists in referral records."
-                print("Error: \(message)")
-                errorMessage = message
+                errorMessage = "Contact already exists in referral records."
               } catch {
-                let message = "Error for contact '\(selectedContact.fullName)': \(error.localizedDescription)"
-                print("Error: \(message)")
-                errorMessage = message
+                errorMessage = error.localizedDescription
               }
             }
           }
-          .buttonStyle(.borderedProminent)
           .padding(.top)
-          
-          Divider()
-          
-          // MARK: - Referral Details
-          VStack(alignment: .leading, spacing: 10) {
-            Button("Fetch Referred Contacts") {
-              Task {
-                do {
-                  referredContacts = try await contactReferralClient.fetchReferredContacts(selectedContact)
-                } catch {
-                  let message = "Failed to fetch referred contacts for '\(selectedContact.fullName)'."
-                  print("Error: \(message)")
-                  errorMessage = message
-                }
-              }
-            }
-            
-            if !referredContacts.isEmpty {
-              Text("Referred Contacts:")
-                .font(.headline)
-              List(referredContacts, id: \.id) { contact in
-                Text(contact.fullName)
-              }
-              .frame(maxHeight: 150)
-            }
-            
-            Button("Fetch Referrer") {
-              Task {
-                do {
-                  referrer = try await contactReferralClient.fetchReferrer(selectedContact)
-                } catch {
-                  let message = "Failed to fetch referrer for '\(selectedContact.fullName)'."
-                  print("Error: \(message)")
-                  errorMessage = message
-                }
-              }
-            }
-            
-            Button("Delete Database") {
-              Task {
-                do {
-                  try await referralRecordClient.deleteDatabase()
-                } catch {
-                  let message = "Failed to Delete Database"
-                  print("Error: \(message)")
-                  errorMessage = message
-                }
-              }
-            }
-            
-            if let referrer = referrer {
-              Text("Referrer: \(referrer.fullName)")
-                .font(.headline)
-                .padding(.top)
-            }
-          }
-          .padding(.horizontal)
         }
         
-        // MARK: - Error Message
-        if let errorMessage = errorMessage {
-          VStack(spacing: 10) {
-            Text("Error: \(errorMessage)")
-              .foregroundColor(.red)
-              .padding()
-            
-            Button("Clear Error") {
-              self.errorMessage = nil
+        // MARK: - Referral Details
+        if let selectedContact = selectedContact {
+          SectionHeader(title: "Referral Details")
+          
+          BuzzUI.Button("Fetch Referred Contacts", style: .secondary) {
+            Task {
+              do {
+                referredContacts = try await contactReferralClient.fetchReferredContacts(selectedContact)
+              } catch {
+                errorMessage = error.localizedDescription
+              }
             }
-            .buttonStyle(.bordered)
           }
-          .padding()
+          
+          if !referredContacts.isEmpty {
+            ReferredContactsList(contacts: referredContacts) { contact in }
+              .frame(maxHeight: 150)
+          }
+          
+          BuzzUI.Button("Fetch Referrer", style: .secondary) {
+            Task {
+              do {
+                referrer = try await contactReferralClient.fetchReferrer(selectedContact)
+              } catch {
+                errorMessage = error.localizedDescription
+              }
+            }
+          }
+          
+          if let referrer = referrer {
+            BuzzUI.Text("Referrer: \(referrer.fullName)", style: .bodyMedium)
+          }
+        }
+        
+        // MARK: - Error Handling
+        if let errorMessage = errorMessage {
+          EmptyStateView(
+            message: errorMessage,
+            icon: Image(systemName: "exclamationmark.triangle")
+          )
         }
         
         Spacer()
       }
+      .padding(theme.spacing.containerPadding)
       .task {
         await loadContacts()
+        fetchUnreferredContacts()
       }
       .navigationTitle("Referrals")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .bottomBar) {
+          FloatingActionButton(
+            icon: Image(systemName: "plus"),
+            action: {}
+          )
+        }
+      }
     }
   }
   
   // MARK: - Functions
-  
   private func loadContacts() async {
     do {
-      contacts = try await contactsClient.fetchContacts()
+      contacts = try await contactReferralClient.fetchContacts()
     } catch {
-      let message = "Failed to load contacts."
-      print("Error: \(message)")
-      errorMessage = message
+      errorMessage = "Failed to load contacts."
+    }
+  }
+  
+  private func fetchUnreferredContacts() {
+    Task {
+      do {
+        unreferredContacts = try await contactReferralClient.fetchUnreferredContacts(Contact.mock)
+      } catch {
+        errorMessage = "Failed to fetch unreferred contacts."
+      }
     }
   }
   
@@ -176,9 +155,7 @@ struct ContactReferralView: View {
         referredContacts = try await contactReferralClient.fetchReferredContacts(selectedContact!)
         referrer = try await contactReferralClient.fetchReferrer(selectedContact!)
       } catch {
-        let message = "Failed to fetch referral details for '\(selectedContact?.fullName ?? "Unknown Contact")'."
-        print("Error: \(message)")
-        errorMessage = message
+        errorMessage = error.localizedDescription
       }
     }
   }

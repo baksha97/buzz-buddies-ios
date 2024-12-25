@@ -30,6 +30,9 @@ extension ReferralRecord: Identifiable {
   }
 }
 
+//extension BelongsToAssociation: @unchecked @retroactive Sendable {}
+//extension HasManyAssociation: @unchecked @retroactive Sendable {}
+
 extension ReferralRecord: FetchableRecord, PersistableRecord {
   /// Database Table Name
   public static let databaseTableName = "contact_referral_records"

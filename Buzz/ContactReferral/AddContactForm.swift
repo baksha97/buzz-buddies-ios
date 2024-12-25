@@ -50,10 +50,10 @@ struct AddContactModal: View {
   @State private var referralOptions: [Contact] = []
   
   
-  @Dependency(\.contactsClient.fetchContacts)
+  @Dependency(\.contactReferralClient.fetchContacts)
   var fetchContacts
   
-  @Dependency(\.contactsClient.addContact)
+  @Dependency(\.contactReferralClient.addContact)
   var addContact
   
   

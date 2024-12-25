@@ -9,18 +9,35 @@ public struct ReferralRecordClient: Sendable {
   //  public var setupDatabase: @Sendable () throws -> Void
   public var createRecord: @Sendable (_ referral: ReferralRecord) async throws -> Void
   public var fetchRecord: @Sendable (_ contactUUID: UUID) async throws -> ReferralRecord?
+  public var fetchAllRecords: @Sendable () async throws -> [ReferralRecord]
   public var fetchReferrer: @Sendable (_ contactUUID: UUID) async throws -> ReferralRecord?
   public var fetchReferredContacts: @Sendable (_ contactUUID: UUID) async throws -> [ReferralRecord]
   public var fetchReferralWithRelationships: @Sendable (_ contactUUID: UUID) async throws -> (ReferralRecord?, [ReferralRecord])
   public var deleteDatabase: @Sendable () async throws -> Void
   
   
-  public enum Failure: Error, Equatable {
+  public enum Failure: Error, LocalizedError {
+    
     case saveFailed
     case fetchFailed
     case notFound
     case deleteFailed
     case hasExistingRecordForContact
+    
+    var localizedDescription: String {
+      switch self {
+      case .saveFailed:
+        "Save failed"
+      case .fetchFailed:
+        "Fetch failed "
+      case .notFound:
+        "Not Found"
+      case .deleteFailed:
+        "Delete failed"
+      case .hasExistingRecordForContact:
+        "A record already exists"
+      }
+    }
   }
 }
 
@@ -32,6 +49,7 @@ fileprivate let dbPath = try! FileManager.default
 // MARK: - Shared Implementation Logic
 private extension ReferralRecordClient {
   static func makeClient(with dbQueue: DatabaseQueue) -> ReferralRecordClient {
+    @Sendable
     func setupDatabase() {
       do {
         try dbQueue.write { db in
@@ -63,6 +81,11 @@ private extension ReferralRecordClient {
           try ReferralRecord
             .filter(ReferralRecord.Columns.contactUUID == contactUUID)
             .fetchOne(db)
+        }
+      },
+      fetchAllRecords: {
+        try await dbQueue.read { db in
+          try ReferralRecord.fetchAll(db)
         }
       },
       fetchReferrer: { contactUUID in
@@ -102,6 +125,7 @@ private extension ReferralRecordClient {
       },
       deleteDatabase: {
         try await dbQueue.erase()
+        setupDatabase()
       }
     )
   }

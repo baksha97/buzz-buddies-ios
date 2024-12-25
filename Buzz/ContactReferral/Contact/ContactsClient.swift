@@ -9,6 +9,8 @@ public struct ContactsClient: Sendable {
   public var requestAuthorization: @Sendable () async -> Bool = { true }
   public var fetchContacts: @Sendable () async throws -> [Contact]
   public var fetchContactById: @Sendable (_ id: UUID) async throws -> Contact
+  public var fetchContactsByIds: @Sendable (_ ids: [UUID]) async throws -> [Contact]
+  public var fetchContactsWithoutIds: @Sendable (_ ids: [UUID]) async throws -> [Contact]
   public var addContact: @Sendable (_ contact: Contact) async throws -> Void
   
   public enum Failure: Error, Equatable {
@@ -86,6 +88,42 @@ private actor ContactsActor {
     }
   }
   
+  func fetchContactsByIds(ids: [UUID]) async throws -> [Contact] {
+    guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
+      throw ContactsClient.Failure.unauthorized
+    }
+    
+    let keys: [CNKeyDescriptor] = [
+      CNContactGivenNameKey as CNKeyDescriptor,
+      CNContactFamilyNameKey as CNKeyDescriptor,
+      CNContactPhoneNumbersKey as CNKeyDescriptor,
+      CNContactThumbnailImageDataKey as CNKeyDescriptor
+    ]
+    
+    // Build Predicate
+    let identifierStrings = ids.map { $0.uuidString }
+    let predicate = CNContact.predicateForContacts(withIdentifiers: identifierStrings)
+    
+    do {
+      let contacts = try store.unifiedContacts(matching: predicate, keysToFetch: keys)
+      return contacts.map { self.domainContact(from: $0) }
+    } catch {
+      throw ContactsClient.Failure.fetchFailed
+    }
+  }
+  
+  func fetchContactsWithoutIds(ids: [UUID]) async throws -> [Contact] {
+    guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
+      throw ContactsClient.Failure.unauthorized
+    }
+    
+    let allContacts = try await fetchContacts()
+    let excludedIDs = Set(ids)
+    
+    return allContacts.filter { !excludedIDs.contains($0.id) }
+  }
+  
+  
   func addContact(_ contact: Contact) async throws {
     guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
       throw ContactsClient.Failure.unauthorized
@@ -136,6 +174,12 @@ extension ContactsClient: DependencyKey {
       fetchContactById: { id in
         try await actor.fetchContactById(id: id)
       },
+      fetchContactsByIds: { ids in
+        try await actor.fetchContactsByIds(ids: ids)
+      },
+      fetchContactsWithoutIds: { ids in
+        try await actor.fetchContactsWithoutIds(ids: ids)
+      },
       addContact: { contact in
         try await actor.addContact(contact)
       }
@@ -155,6 +199,12 @@ extension ContactsClient {
           throw Failure.contactNotFound
         }
         return contact
+      },
+      fetchContactsByIds: { ids in
+        contacts.value.filter { ids.contains($0.id) }
+      },
+      fetchContactsWithoutIds: { ids in
+        contacts.value.filter { !ids.contains($0.id) }
       },
       addContact: { contact in
         contacts.withValue { contacts in

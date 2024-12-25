@@ -1,14 +1,14 @@
 import SwiftUI
 import Dependencies
 
-struct ContactsView: View {
+struct MyContactsView: View {
   @Environment(\.theme) private var theme
   @State private var errorMessage: String? = nil
   @State private var contacts: [Contact] = []
   @State private var isShowingAddContact = false
   
   
-  @Dependency(\.contactsClient.fetchContacts)
+  @Dependency(\.contactReferralClient.fetchContacts)
   private var fetchContacts
   
   var body: some View {
@@ -112,12 +112,12 @@ struct ContactRow: View {
   }
 }
 #Preview("Contacts - Light") {
-  ContactsView()
+  MyContactsView()
     .withTheme(AppTheme.light)
 }
 
 #Preview("Contacts - Dark") {
-  ContactsView()
+  MyContactsView()
     .withTheme(AppTheme.dark)
     .preferredColorScheme(.dark)
 }
