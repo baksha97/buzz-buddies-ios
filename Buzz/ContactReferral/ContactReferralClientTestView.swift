@@ -1,275 +1,268 @@
 import SwiftUI
+import SwiftNavigation
+import SwiftUINavigation
 import Dependencies
 import Observation
 
+// MARK: - View Model
 @MainActor
 @Observable
 final class ContactReferralViewModel {
   @ObservationIgnored
   @Dependency(\.contactReferralClient) private var client
   
-  // Main view state
+  // MARK: - State
+  @CasePathable
   enum ViewState {
     case loading
     case loaded
     case error(String)
   }
   
-  // Sheet presentation state
-  enum SheetState {
-    case none
-    case addingContact
-    case showingDetails(ContactReferralModel)
+  @CasePathable
+  enum Destination {
+    case addContact
+    case contactDetails(ContactReferralModel)
   }
   
-  // Authorization state
+  @CasePathable
   enum AuthorizationState {
     case unauthorized
     case authorized
   }
   
-  // State properties
+  // MARK: - Properties
   var viewState: ViewState = .loading
-  var sheetState: SheetState = .none
+  var destination: Destination?
   var authState: AuthorizationState = .unauthorized
   var searchText = ""
   
-  // Model data
-  var contacts: [ContactReferralModel] = []
-  var unreferredContacts: [ContactReferralModel] = []
+  private(set) var contacts: [ContactReferralModel] = []
+  private(set) var unreferredContacts: [ContactReferralModel] = []
   
-  // Filtered contacts based on search
+  // MARK: - Computed Properties
   var filteredContacts: [ContactReferralModel] {
-    guard !searchText.isEmpty else { return contacts }
-    return contacts.filter { contact in
-      contact.contact.fullName.localizedCaseInsensitiveContains(searchText) ||
-      contact.contact.phoneNumbers.contains { $0.contains(searchText) }
-    }
+    filterContacts(contacts)
   }
   
   var filteredUnreferredContacts: [ContactReferralModel] {
-    guard !searchText.isEmpty else { return unreferredContacts }
-    return unreferredContacts.filter { contact in
+    filterContacts(unreferredContacts)
+  }
+  
+  var isAuthorized: Bool { authState == .authorized }
+  var authorizationStatusText: String { isAuthorized ? "✅ Authorized" : "⚠️ Unauthorized" }
+  var authorizationStatusColor: Color { isAuthorized ? .green : .orange }
+  
+  var errorMessage: String? {
+    if case let .error(message) = viewState { return message }
+    return nil
+  }
+  
+  var isLoading: Bool {
+    if case .loading = viewState { return true }
+    return false
+  }
+  
+  var availableReferrers: [ContactReferralModel] {
+    contacts
+  }
+  
+  // MARK: - Navigation Actions
+  func showAddContact() {
+    destination = .addContact
+  }
+  
+  func showDetails(for contact: ContactReferralModel) {
+    destination = .contactDetails(contact)
+  }
+  
+  func dismissDestination() {
+    destination = nil
+  }
+  
+  // MARK: - Contact Management
+  @MainActor
+  func addContact(_ contact: Contact) async {
+    await performAction {
+      try await client.addContact(contact)
+      await loadAllData()
+      dismissDestination()
+    }
+  }
+  
+  @MainActor
+  func createReferral(contact: ContactReferralModel, referredBy: Contact?) async {
+    await performAction {
+      try await client.createReferral(contact.contact.id, referredBy?.id)
+      await loadAllData()
+      dismissDestination()
+    }
+  }
+  
+  @MainActor
+  func updateExistingReferral(model: ContactReferralModel, referredBy: Contact?) async {
+    await performAction {
+      try await client.updateReferral(model.contact.id, referredBy?.id)
+      await loadAllData()
+      dismissDestination()
+    }
+  }
+  
+  // MARK: - Data Loading
+  @MainActor
+  func initialize() async {
+    await checkAuthorization()
+    await loadAllData()
+  }
+  
+  @MainActor
+  func refreshData() async {
+    await loadAllData()
+  }
+  
+  // MARK: - Private Helpers
+  private func filterContacts(_ contactList: [ContactReferralModel]) -> [ContactReferralModel] {
+    guard !searchText.isEmpty else { return contactList }
+    return contactList.filter { contact in
       contact.contact.fullName.localizedCaseInsensitiveContains(searchText) ||
       contact.contact.phoneNumbers.contains { $0.contains(searchText) }
     }
   }
   
-  // Computed properties for view binding
-  var isShowingDetailsSheet: Bool {
-    get {
-      if case .showingDetails = sheetState { return true }
-      return false
-    }
-    set {
-      if !newValue { sheetState = .none }
-    }
-  }
-  
-  var isAddingContact: Bool {
-    get {
-      if case .addingContact = sheetState { return true }
-      return false
-    }
-    set {
-      if !newValue { sheetState = .none }
-      else { sheetState = .addingContact }
+  @MainActor
+  private func loadAllData() async {
+    await performAction {
+      async let contactsResult = client.fetchContacts()
+      async let unreferredResult = client.fetchUnreferredContacts()
+      
+      let (fetchedContacts, fetchedUnreferred) = try await (contactsResult, unreferredResult)
+      contacts = fetchedContacts
+      unreferredContacts = fetchedUnreferred
     }
   }
   
-  var selectedContact: ContactReferralModel? {
-    get {
-      if case let .showingDetails(contact) = sheetState { return contact }
-      return nil
+  private func performAction(_ action: () async throws -> Void) async {
+    viewState = .loading
+    do {
+      try await action()
+      viewState = .loaded
+    } catch {
+      viewState = .error("Operation failed: \(error.localizedDescription)")
     }
   }
   
-  var isAuthorized: Bool {
-    get { authState == .authorized }
-  }
-  
-  var errorMessage: String? {
-    get {
-      if case let .error(message) = viewState { return message }
-      return nil
-    }
-  }
-  
-  var isLoading: Bool {
-    get {
-      guard case .loaded = viewState else {
-        return false
-      }
-      return true
-    }
-  }
-  
-  // MARK: - Actions
-  
-  func requestAuthorization() async {
+  @MainActor
+  private func checkAuthorization() async {
     let isAuthorized = await client.requestContactsAuthorization()
     authState = isAuthorized ? .authorized : .unauthorized
   }
-  
-  func loadContacts() async {
-    do {
-      contacts = try await client.fetchContacts()
-      viewState = .loaded
-    } catch {
-      viewState = .error("Failed to load contacts: \(error.localizedDescription)")
-    }
-  }
-  
-  func loadUnreferredContacts() async {
-    do {
-      unreferredContacts = try await client.fetchUnreferredContacts()
-      viewState = .loaded
-    } catch {
-      viewState = .error("Failed to load unreferred contacts: \(error.localizedDescription)")
-    }
-  }
-  
-  func addContact(_ contact: Contact) async {
-    viewState = .loading
-    do {
-      try await client.addContact(contact)
-      await loadContacts()
-      await loadUnreferredContacts()
-      sheetState = .none
-    } catch {
-      viewState = .error("Failed to add contact: \(error.localizedDescription)")
-    }
-  }
-  
-  func createReferral(contact: ContactReferralModel, referredBy: Contact?) async {
-    viewState = .loading
-    do {
-      try await client.createReferral(contact.contact.id, referredBy?.id)
-      await loadContacts()
-      await loadUnreferredContacts()
-      sheetState = .none
-    } catch {
-      viewState = .error("Failed to create referral: \(error.localizedDescription)")
-    }
-  }
-  
-  func loadInitialData() async {
-    viewState = .loading
-    await loadContacts()
-    await loadUnreferredContacts()
-  }
-  
-  func showDetails(for contact: ContactReferralModel) {
-    sheetState = .showingDetails(contact)
-  }
-  
-  func clearSelectedContact() {
-    sheetState = .none
-  }
-  
-  func dismissError() {
-    viewState = .loaded
-  }
-  
-  func checkAuthorization() async {
-    await requestAuthorization()
-  }
 }
 
-struct ContactReferralTestView: View {
+// MARK: - Main View
+struct ContactReferralView: View {
   @State private var viewModel = ContactReferralViewModel()
   
   var body: some View {
     NavigationView {
       VStack(spacing: 0) {
-        // Action Buttons
-        HStack(spacing: 12) {
-          Button(action: {
-            viewModel.isAddingContact = true
-          }) {
-            Label("Add Contact", systemImage: "person.badge.plus")
-              .frame(maxWidth: .infinity)
-          }
-          .buttonStyle(.borderedProminent)
-          
-          Button(action: {
-            Task {
-              await viewModel.loadInitialData()
-            }
-          }) {
-            Label("Refresh", systemImage: "arrow.clockwise")
-              .frame(maxWidth: .infinity)
-          }
-          .buttonStyle(.bordered)
-        }
-        .padding()
+        actionButtons
         
         List {
-          // Authorization Status
-          HStack {
-            Text(viewModel.isAuthorized ? "✅ Authorized" : "⚠️ Unauthorized")
-              .foregroundColor(viewModel.isAuthorized ? .green : .orange)
-            Spacer()
-          }
-          
-          Section("All Contacts") {
-            ForEach(viewModel.filteredContacts) { contact in
-              ContactReferralRow(model: contact)
-                .onTapGesture {
-                  viewModel.showDetails(for: contact)
-                }
-            }
-          }
-          
-          Section("Unreferred Contacts") {
-            ForEach(viewModel.filteredUnreferredContacts) { contact in
-              ContactReferralRow(model: contact)
-                .onTapGesture {
-                  viewModel.showDetails(for: contact)
-                }
-            }
-          }
+          authorizationStatus
+          contactsSections
         }
         .searchable(text: $viewModel.searchText, prompt: "Search contacts")
       }
-      .navigationTitle("Contact Referral Tests")
-      .sheet(isPresented: $viewModel.isAddingContact) {
-        AddContactView(isPresented: $viewModel.isAddingContact) { contact in
+      .navigationTitle("Contact Referral")
+      .sheet(isPresented: Binding($viewModel.destination.addContact)) { 
+        AddContactView { contact in
           Task {
             await viewModel.addContact(contact)
           }
         }
       }
-      .sheet(isPresented: $viewModel.isShowingDetailsSheet) {
-        if let contact = viewModel.selectedContact {
+      .sheet(item: $viewModel.destination.contactDetails) { contact in
           ContactDetailsView(
-            contact: contact,
-            availableReferrers: viewModel.contacts,
-            onUpdateReferral: { contact, referrer in
+              contact: contact,
+              availableReferrers: viewModel.availableReferrers
+          ) { contact, referrer in
               Task {
-                await viewModel.createReferral(contact: contact, referredBy: referrer)
+                  if contact.referredBy == nil {
+                      await viewModel.createReferral(contact: contact, referredBy: referrer)
+                  } else {
+                      await viewModel.updateExistingReferral(model: contact, referredBy: referrer)
+                  }
               }
-            }
-          )
-        }
+          }
       }
       .alert("Error", isPresented: .init(
         get: { viewModel.errorMessage != nil },
-        set: { if !$0 { viewModel.dismissError() } }
+        set: { if !$0 { viewModel.viewState = .loaded } }
       )) {
-        Button("OK") { viewModel.dismissError() }
+        Button("OK") { viewModel.viewState = .loaded }
       } message: {
         Text(viewModel.errorMessage ?? "")
       }
       .task {
-        await viewModel.checkAuthorization()
-        await viewModel.loadInitialData()
+        await viewModel.initialize()
       }
+    }
+  }
+  
+  private var actionButtons: some View {
+    HStack(spacing: 12) {
+      Button {
+        viewModel.showAddContact()
+      } label: {
+        Label("Add Contact", systemImage: "person.badge.plus")
+          .frame(maxWidth: .infinity)
+      }
+      .buttonStyle(.borderedProminent)
+      
+      Button {
+        Task {
+          await viewModel.refreshData()
+        }
+      } label: {
+        Label("Refresh", systemImage: "arrow.clockwise")
+          .frame(maxWidth: .infinity)
+      }
+      .buttonStyle(.bordered)
+    }
+    .padding()
+  }
+  
+  private var authorizationStatus: some View {
+    HStack {
+      Text(viewModel.authorizationStatusText)
+        .foregroundColor(viewModel.authorizationStatusColor)
+      Spacer()
+    }
+  }
+  
+  private var contactsSections: some View {
+    Group {
+      Section("All Contacts") {
+        contactsList(contacts: viewModel.filteredContacts)
+      }
+      
+      Section("Unreferred Contacts") {
+        contactsList(contacts: viewModel.filteredUnreferredContacts)
+      }
+    }
+  }
+  
+  private func contactsList(contacts: [ContactReferralModel]) -> some View {
+    ForEach(contacts) { contact in
+      ContactReferralRow(model: contact)
+        .onTapGesture {
+          viewModel.showDetails(for: contact)
+        }
     }
   }
 }
 
-
+// MARK: - Supporting Views
 struct ContactReferralRow: View {
   let model: ContactReferralModel
   
@@ -301,8 +294,8 @@ struct ContactReferralRow: View {
 }
 
 struct AddContactView: View {
-  @Binding var isPresented: Bool
-  let onAdd: (Contact) -> Void
+  let onAdd: (Contact) async -> Void
+  @Environment(\.dismiss) private var dismiss
   
   @State private var givenName = ""
   @State private var familyName = ""
@@ -339,15 +332,18 @@ struct AddContactView: View {
             familyName: familyName,
             phoneNumbers: allPhoneNumbers
           )
-          onAdd(contact)
-          isPresented = false
+          
+          Task {
+            await onAdd(contact)
+            dismiss()
+          }
         }
         .disabled(givenName.isEmpty || familyName.isEmpty)
       }
       .navigationTitle("Add Contact")
       .navigationBarItems(
         trailing: Button("Cancel") {
-          isPresented = false
+          dismiss()
         }
       )
     }
@@ -359,7 +355,7 @@ struct ContactDetailsView: View {
   let availableReferrers: [ContactReferralModel]
   let onUpdateReferral: (ContactReferralModel, Contact?) -> Void
   
-  @Environment(\.dismiss) var dismiss
+  @Environment(\.dismiss) private var dismiss
   @State private var selectedReferrerId: UUID?
   
   var body: some View {
@@ -375,25 +371,20 @@ struct ContactDetailsView: View {
           }
         }
         
-        if let referredBy = contact.referredBy {
-          Section("Referred By") {
-            Text(referredBy.fullName)
-          }
-        } else {
-          Section("Add Referrer") {
-            Picker("Referred By", selection: $selectedReferrerId) {
-              Text("None").tag(Optional<UUID>.none)
-              ForEach(availableReferrers.filter { $0.id != contact.id }) { referrer in
-                Text(referrer.contact.fullName).tag(Optional(referrer.id))
-              }
+        Section("Referrer") {
+          Picker("Referred By", selection: $selectedReferrerId) {
+            Text("None").tag(Optional<UUID>.none)
+            ForEach(availableReferrers.filter { $0.id != contact.id }) { referrer in
+              Text(referrer.contact.fullName).tag(Optional(referrer.id))
             }
-            
-            if selectedReferrerId != nil {
-              Button("Update Referrer") {
-                let referrer = availableReferrers.first { $0.id == selectedReferrerId }?.contact
-                onUpdateReferral(contact, referrer)
-                dismiss()
-              }
+          }
+          
+          if selectedReferrerId != contact.referredBy?.id {
+            Button(contact.referredBy == nil ? "Add Referrer" : "Update Referrer") {
+              let referrer = availableReferrers
+                .first { $0.id == selectedReferrerId }?.contact
+              onUpdateReferral(contact, referrer)
+              dismiss()
             }
           }
         }
@@ -413,15 +404,13 @@ struct ContactDetailsView: View {
         }
       )
       .onAppear {
-        // Prepopulate the selected referrer if one exists
-        if let referredBy = contact.referredBy {
-          selectedReferrerId = referredBy.id
-        }
+        selectedReferrerId = contact.referredBy?.id
       }
     }
   }
 }
 
+// MARK: - Preview
 #Preview {
-  ContactReferralTestView()
+  ContactReferralView()
 }
