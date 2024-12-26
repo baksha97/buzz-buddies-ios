@@ -16,28 +16,12 @@ public struct ReferralRecordClient: Sendable {
   public var deleteDatabase: @Sendable () async throws -> Void
   
   
-  public enum Failure: Error, LocalizedError {
-    
+  public enum Failure: Error {
     case saveFailed
     case fetchFailed
     case notFound
     case deleteFailed
     case hasExistingRecordForContact
-    
-    var localizedDescription: String {
-      switch self {
-      case .saveFailed:
-        "Save failed"
-      case .fetchFailed:
-        "Fetch failed "
-      case .notFound:
-        "Not Found"
-      case .deleteFailed:
-        "Delete failed"
-      case .hasExistingRecordForContact:
-        "A record already exists"
-      }
-    }
   }
 }
 
@@ -107,6 +91,7 @@ private extension ReferralRecordClient {
         try await dbQueue.read { db in
           try ReferralRecord
             .filter(ReferralRecord.Columns.referredByUUID == contactUUID)
+            .filter(ReferralRecord.Columns.contactUUID != contactUUID)
             .fetchAll(db)
         }
       },

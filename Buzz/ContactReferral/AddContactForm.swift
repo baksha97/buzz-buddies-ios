@@ -47,7 +47,7 @@ struct AddContactModal: View {
   @State private var errorMessage: String? = nil
   
   // Sample referral data - replace with real data
-  @State private var referralOptions: [Contact] = []
+  @State private var referralOptions: [ContactReferralModel] = []
   
   
   @Dependency(\.contactReferralClient.fetchContacts)
@@ -103,9 +103,9 @@ struct AddContactModal: View {
                 Button("None") {
                   formState.referredBy = nil
                 }
-                ForEach(referralOptions) { contact in
-                  Button(contact.fullName) {
-                    formState.referredBy = contact
+                ForEach(referralOptions) { contactReferralModel in
+                  Button(contactReferralModel.contact.fullName) {
+                    formState.referredBy = contactReferralModel.contact
                   }
                 }
               } label: {

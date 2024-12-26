@@ -1,166 +1,260 @@
 import SwiftUI
 import Dependencies
 
-struct ContactReferralView: View {
-  
-  @Environment(\.theme) private var theme
-  // MARK: - State Properties
-  @State private var contacts: [Contact] = []
-  @State private var unreferredContacts: [Contact] = []
-  @State private var selectedContact: Contact?
-  @State private var selectedReferrer: Contact? = nil
-  @State private var referredContacts: [Contact] = []
-  @State private var referrer: Contact?
-  @State private var errorMessage: String?
-  
-  @Dependency(\.contactReferralClient) private var contactReferralClient
-  
-  // MARK: - Body
-  var body: some View {
-    NavigationView {
-      VStack(spacing: theme.spacing.lg) {
-        BuzzUI.Text("Contact Referral System", style: .displayLarge)
-          .padding()
-        
-        // MARK: - Contact Picker
-        BuzzUI.Card(style: .elevated) {
-          VStack(alignment: .leading, spacing: theme.spacing.md) {
-            BuzzUI.Text("Select an Unreferred Contact:", style: .headingMedium)
-            Picker("Select Contact", selection: $selectedContact) {
-              Text("None").tag(Optional<Contact>(nil))
-              ForEach(unreferredContacts, id: \ .id) { contact in
-                Text(contact.fullName).tag(contact)
-              }
-            }
-            .pickerStyle(.menu)
-          }
-        }
-        
-        // MARK: - Referrer Picker
-        if let selectedContact = selectedContact {
-          BuzzUI.Card(style: .elevated) {
-            VStack(alignment: .leading, spacing: theme.spacing.md) {
-              BuzzUI.Text("Select Referrer (Optional):", style: .headingMedium)
-              Picker("Select Referrer", selection: $selectedReferrer) {
-                Text("None").tag(Optional<Contact>(nil))
-                ForEach(contacts.filter { $0.id != selectedContact.id }, id: \ .id) { contact in
-                  Text(contact.fullName).tag(Optional(contact))
+struct ContactReferralTestView: View {
+    @Dependency(\.contactReferralClient) var client
+    
+    @State private var contacts: [ContactReferralModel] = []
+    @State private var unreferredContacts: [ContactReferralModel] = []
+    @State private var selectedContact: ContactReferralModel?
+    @State private var isShowingReferralSheet = false
+    @State private var isAuthorized = false
+    @State private var errorMessage: String?
+    @State private var isAddingContact = false
+    @State private var isCreatingReferral = false
+    
+    var body: some View {
+        NavigationView {
+            List {
+                Section("Authorization Status") {
+                    HStack {
+                        Text(isAuthorized ? "Authorized" : "Unauthorized")
+                        Spacer()
+                        Button("Request Authorization") {
+                            Task {
+                                isAuthorized = await client.requestContactsAuthorization()
+                            }
+                        }
+                    }
                 }
-              }
-              .pickerStyle(.menu)
+                
+                Section("All Contacts") {
+                    ForEach(contacts) { contact in
+                        ContactReferralRow(model: contact)
+                            .onTapGesture {
+                                selectedContact = contact
+                                isShowingReferralSheet = true
+                            }
+                    }
+                    
+                    Button("Refresh Contacts") {
+                        Task {
+                            await loadContacts()
+                        }
+                    }
+                    
+                    Button("Add Contact") {
+                        isAddingContact = true
+                    }
+                }
+                
+                Section("Unreferred Contacts") {
+                    ForEach(unreferredContacts) { contact in
+                        ContactReferralRow(model: contact)
+                    }
+                    
+                    Button("Load Unreferred") {
+                        Task {
+                            await loadUnreferredContacts()
+                        }
+                    }
+                }
             }
-          }
-          
-          BuzzUI.Button("Create Referral", style: .primary) {
-            Task {
-              do {
-                try await contactReferralClient.createReferral(selectedContact, selectedReferrer)
-                errorMessage = nil
-                fetchReferralDetails()
-                fetchUnreferredContacts()
-              } catch ContactReferralClient.Failure.contactAlreadyExistsInReferralRecords {
-                errorMessage = "Contact already exists in referral records."
-              } catch {
-                errorMessage = error.localizedDescription
-              }
+            .navigationTitle("Contact Referral Tests")
+            .sheet(isPresented: $isAddingContact) {
+                AddContactView(isPresented: $isAddingContact, onAdd: { contact in
+                    Task {
+                        await addContact(contact)
+                    }
+                })
             }
-          }
-          .padding(.top)
-        }
-        
-        // MARK: - Referral Details
-        if let selectedContact = selectedContact {
-          SectionHeader(title: "Referral Details")
-          
-          BuzzUI.Button("Fetch Referred Contacts", style: .secondary) {
-            Task {
-              do {
-                referredContacts = try await contactReferralClient.fetchReferredContacts(selectedContact)
-              } catch {
-                errorMessage = error.localizedDescription
-              }
+            .sheet(isPresented: $isShowingReferralSheet, onDismiss: { selectedContact = nil }) {
+                if let contact = selectedContact {
+                CreateReferralView(
+                    contact: contact,
+                    availableReferrers: contacts,
+                    onCreateReferral: { contact, referrer in
+                        Task {
+                            await createReferral(contact: contact, referredBy: referrer)
+                        }
+                    }
+                )
+                }
             }
-          }
-          
-          if !referredContacts.isEmpty {
-            ReferredContactsList(contacts: referredContacts) { contact in }
-              .frame(maxHeight: 150)
-          }
-          
-          BuzzUI.Button("Fetch Referrer", style: .secondary) {
-            Task {
-              do {
-                referrer = try await contactReferralClient.fetchReferrer(selectedContact)
-              } catch {
-                errorMessage = error.localizedDescription
-              }
+            .alert("Error", isPresented: .init(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )) {
+                Button("OK") { errorMessage = nil }
+            } message: {
+                Text(errorMessage ?? "")
             }
-          }
-          
-          if let referrer = referrer {
-            BuzzUI.Text("Referrer: \(referrer.fullName)", style: .bodyMedium)
-          }
+            .task {
+                await loadContacts()
+                await loadUnreferredContacts()
+            }
         }
-        
-        // MARK: - Error Handling
-        if let errorMessage = errorMessage {
-          EmptyStateView(
-            message: errorMessage,
-            icon: Image(systemName: "exclamationmark.triangle")
-          )
+    }
+    
+    private func loadContacts() async {
+        do {
+            contacts = try await client.fetchContacts()
+        } catch {
+            errorMessage = "Failed to load contacts: \(error.localizedDescription)"
         }
-        
-        Spacer()
-      }
-      .padding(theme.spacing.containerPadding)
-      .task {
-        await loadContacts()
-        fetchUnreferredContacts()
-      }
-      .navigationTitle("Referrals")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .bottomBar) {
-          FloatingActionButton(
-            icon: Image(systemName: "plus"),
-            action: {}
-          )
+    }
+    
+    private func loadUnreferredContacts() async {
+        do {
+            unreferredContacts = try await client.fetchUnreferredContacts()
+        } catch {
+            errorMessage = "Failed to load unreferred contacts: \(error.localizedDescription)"
         }
-      }
     }
-  }
-  
-  // MARK: - Functions
-  private func loadContacts() async {
-    do {
-      contacts = try await contactReferralClient.fetchContacts()
-    } catch {
-      errorMessage = "Failed to load contacts."
+    
+    private func addContact(_ contact: Contact) async {
+        do {
+            try await client.addContact(contact)
+            await loadContacts()
+            await loadUnreferredContacts()
+        } catch {
+            errorMessage = "Failed to add contact: \(error.localizedDescription)"
+        }
     }
-  }
-  
-  private func fetchUnreferredContacts() {
-    Task {
-      do {
-        unreferredContacts = try await contactReferralClient.fetchUnreferredContacts(Contact.mock)
-      } catch {
-        errorMessage = "Failed to fetch unreferred contacts."
-      }
+    
+    private func createReferral(contact: ContactReferralModel, referredBy: Contact?) async {
+        do {
+            try await client.createReferral(contact.contact, referredBy)
+            await loadContacts()
+            await loadUnreferredContacts()
+        } catch {
+            errorMessage = "Failed to create referral: \(error.localizedDescription)"
+        }
     }
-  }
-  
-  private func fetchReferralDetails() {
-    Task {
-      do {
-        referredContacts = try await contactReferralClient.fetchReferredContacts(selectedContact!)
-        referrer = try await contactReferralClient.fetchReferrer(selectedContact!)
-      } catch {
-        errorMessage = error.localizedDescription
-      }
+}
+
+struct ContactReferralRow: View {
+    let model: ContactReferralModel
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(model.contact.fullName)
+                .font(.headline)
+            
+            if !model.contact.phoneNumbers.isEmpty {
+                Text(model.contact.phoneNumbers[0])
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            if let referredBy = model.referredBy {
+                Text("Referred by: \(referredBy.fullName)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            if !model.referredContacts.isEmpty {
+                Text("Referrals: \(model.referredContacts.map(\.fullName).joined(separator: ", "))")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
     }
-  }
+}
+
+struct AddContactView: View {
+    @Binding var isPresented: Bool
+    let onAdd: (Contact) -> Void
+    
+    @State private var givenName = ""
+    @State private var familyName = ""
+    @State private var phoneNumber = ""
+    @State private var additionalPhoneNumbers: [String] = []
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Name")) {
+                    TextField("Given Name", text: $givenName)
+                    TextField("Family Name", text: $familyName)
+                }
+                
+                Section(header: Text("Phone Numbers")) {
+                    TextField("Primary Phone Number", text: $phoneNumber)
+                    
+                    ForEach(additionalPhoneNumbers.indices, id: \.self) { index in
+                        TextField("Additional Phone", text: $additionalPhoneNumbers[index])
+                    }
+                    
+                    Button("Add Phone Number") {
+                        additionalPhoneNumbers.append("")
+                    }
+                }
+                
+                Button("Add Contact") {
+                    var allPhoneNumbers = [phoneNumber]
+                    allPhoneNumbers.append(contentsOf: additionalPhoneNumbers.filter { !$0.isEmpty })
+                    
+                    let contact = Contact(
+                        id: UUID(),
+                        givenName: givenName,
+                        familyName: familyName,
+                        phoneNumbers: allPhoneNumbers
+                    )
+                    onAdd(contact)
+                    isPresented = false
+                }
+                .disabled(givenName.isEmpty || familyName.isEmpty)
+            }
+            .navigationTitle("Add Contact")
+            .navigationBarItems(
+                trailing: Button("Cancel") {
+                    isPresented = false
+                }
+            )
+        }
+    }
+}
+
+struct CreateReferralView: View {
+    let contact: ContactReferralModel
+    let availableReferrers: [ContactReferralModel]
+    let onCreateReferral: (ContactReferralModel, Contact?) -> Void
+    
+    @Environment(\.dismiss) var dismiss
+    @State private var selectedReferrerId: UUID?
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section("Create Referral") {
+                    Text("Creating referral for: \(contact.contact.fullName)")
+                    
+                    Picker("Referred By", selection: $selectedReferrerId) {
+                        Text("None").tag(Optional<UUID>.none)
+                        ForEach(availableReferrers.filter { $0.id != contact.id }) { referrer in
+                            Text(referrer.contact.fullName).tag(Optional(referrer.id))
+                        }
+                    }
+                }
+                
+                Button("Create Referral") {
+                    let referrer = availableReferrers.first { $0.id == selectedReferrerId }?.contact
+                    onCreateReferral(contact, referrer)
+                    dismiss()
+                }
+            }
+            .navigationTitle("Create Referral")
+            .navigationBarItems(
+                trailing: Button("Cancel") {
+                    dismiss()
+                }
+            )
+        }
+    }
 }
 
 #Preview {
-  ContactReferralView()
+    ContactReferralTestView()
 }

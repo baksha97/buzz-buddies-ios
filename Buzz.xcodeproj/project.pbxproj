@@ -12,7 +12,6 @@
 		1F3B0F9F2D17B1AB001BFA2F /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3B0F9E2D17B1AB001BFA2F /* Dependencies */; };
 		1F3B0FA12D17B1AB001BFA2F /* DependenciesMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3B0FA02D17B1AB001BFA2F /* DependenciesMacros */; };
 		1F3B0FA32D17B1AB001BFA2F /* DependenciesTestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3B0FA22D17B1AB001BFA2F /* DependenciesTestSupport */; };
-		1F7E60102D1C84E100D99FD3 /* VComponents in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7E600F2D1C84E100D99FD3 /* VComponents */; };
 		1FD09BBF2D1C879900BCF64E /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 1FD09BBE2D1C879900BCF64E /* GRDB */; };
 /* End PBXBuildFile section */
 
@@ -39,9 +38,33 @@
 		0BDF18722D171F7D006CEAB0 /* BuzzUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BuzzUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1FD09BCE2D1CCB3F00BCF64E /* Exceptions for "Buzz" folder in "Buzz" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Extensions/Sequence+AsyncMap.swift",
+			);
+			target = 0BDF18562D171F7C006CEAB0 /* Buzz */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		1FD09BCF2D1CCB3F00BCF64E /* Exceptions for "Buzz" folder in "Copy Bundle Resources" phase from "Buzz" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 0BDF18552D171F7C006CEAB0 /* Resources */;
+			membershipExceptions = (
+				"Extensions/Sequence+AsyncMap.swift",
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0BDF18592D171F7C006CEAB0 /* Buzz */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1FD09BCE2D1CCB3F00BCF64E /* Exceptions for "Buzz" folder in "Buzz" target */,
+				1FD09BCF2D1CCB3F00BCF64E /* Exceptions for "Buzz" folder in "Copy Bundle Resources" phase from "Buzz" target */,
+			);
 			path = Buzz;
 			sourceTree = "<group>";
 		};
@@ -67,7 +90,6 @@
 				1F3B0FA12D17B1AB001BFA2F /* DependenciesMacros in Frameworks */,
 				1FD09BBF2D1C879900BCF64E /* GRDB in Frameworks */,
 				0B4AF0CF2D176C460033C3C8 /* SwiftNavigation in Frameworks */,
-				1F7E60102D1C84E100D99FD3 /* VComponents in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -133,7 +155,6 @@
 				0B4AF0D02D176C460033C3C8 /* SwiftUINavigation */,
 				1F3B0F9E2D17B1AB001BFA2F /* Dependencies */,
 				1F3B0FA02D17B1AB001BFA2F /* DependenciesMacros */,
-				1F7E600F2D1C84E100D99FD3 /* VComponents */,
 				1FD09BBE2D1C879900BCF64E /* GRDB */,
 			);
 			productName = Buzz;
@@ -222,7 +243,6 @@
 			packageReferences = (
 				0B4AF0CD2D176C460033C3C8 /* XCRemoteSwiftPackageReference "swift-navigation" */,
 				1F3B0F9D2D17B1AB001BFA2F /* XCRemoteSwiftPackageReference "swift-dependencies" */,
-				1F7E600E2D1C84E100D99FD3 /* XCRemoteSwiftPackageReference "VComponents" */,
 				1FD09BBD2D1C879900BCF64E /* XCRemoteSwiftPackageReference "GRDB" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -643,14 +663,6 @@
 				minimumVersion = 1.6.2;
 			};
 		};
-		1F7E600E2D1C84E100D99FD3 /* XCRemoteSwiftPackageReference "VComponents" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/VakhoKontridze/VComponents";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 7.2.1;
-			};
-		};
 		1FD09BBD2D1C879900BCF64E /* XCRemoteSwiftPackageReference "GRDB" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/groue/GRDB.swift";
@@ -686,11 +698,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F3B0F9D2D17B1AB001BFA2F /* XCRemoteSwiftPackageReference "swift-dependencies" */;
 			productName = DependenciesTestSupport;
-		};
-		1F7E600F2D1C84E100D99FD3 /* VComponents */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1F7E600E2D1C84E100D99FD3 /* XCRemoteSwiftPackageReference "VComponents" */;
-			productName = VComponents;
 		};
 		1FD09BBE2D1C879900BCF64E /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -1,10 +1,10 @@
 import SwiftUI
 import Dependencies
 
-struct MyContactsView: View {
+struct ContactListView: View {
   @Environment(\.theme) private var theme
   @State private var errorMessage: String? = nil
-  @State private var contacts: [Contact] = []
+  @State private var contacts: [ContactReferralModel] = []
   @State private var isShowingAddContact = false
   
   
@@ -78,15 +78,14 @@ struct MyContactsView: View {
 
 struct ContactRow: View {
   @Environment(\.theme) private var theme
-  let contact: Contact
+  let contact: ContactReferralModel
   
   var body: some View {
     BuzzUI.ListItem(
-      title: contact.fullName,
-      subtitle: contact.phoneNumbers.first,
+      title: contact.contact.fullName,
+      subtitle: contact.contact.phoneNumbers.first,
       leading: { contactAvatar },
       trailing: {
-        Text(contact.id.uuidString)
         Spacer()
         Image(systemName: "chevron.right")
           .foregroundColor(theme.colors.textTertiary)
@@ -96,7 +95,7 @@ struct ContactRow: View {
   
   @ViewBuilder
   private var contactAvatar: some View {
-    if let data = contact.avatarData,
+    if let data = contact.contact.avatarData,
        let uiImage = UIImage(data: data) {
       Image(uiImage: uiImage)
         .resizable()
@@ -112,12 +111,12 @@ struct ContactRow: View {
   }
 }
 #Preview("Contacts - Light") {
-  MyContactsView()
+  ContactListView()
     .withTheme(AppTheme.light)
 }
 
 #Preview("Contacts - Dark") {
-  MyContactsView()
+  ContactListView()
     .withTheme(AppTheme.dark)
     .preferredColorScheme(.dark)
 }

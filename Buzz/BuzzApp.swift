@@ -35,7 +35,7 @@ fileprivate struct NavigationHostView: View {
   final class AppState {
     // Controls if the navigation drawer is open or closed
     var hasNavigationDrawerOpen: Bool = false
-
+    
     // Stores which drawer item (screen) was last selected
     var lastDrawerItem: NavigationDrawerItem = .home
   }
@@ -58,7 +58,7 @@ fileprivate struct NavigationHostView: View {
       }
     )
   }
-
+  
   @ViewBuilder
   var drawerContent: some View {
     NavigationDrawerContentView(

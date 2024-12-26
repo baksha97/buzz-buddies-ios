@@ -10,17 +10,14 @@ import Foundation
 public struct ReferralRecord: Codable, Sendable {
   public var contactUUID: UUID
   public var referredByUUID: UUID?  // Optional UUID for the referrer
-  public var createdOn: Date
   
   // Database initializer
   public init(
     contactUUID: UUID = UUID(),
-    referredByUUID: UUID? = nil,
-    createdOn: Date = Date()
+    referredByUUID: UUID? = nil
   ) {
     self.contactUUID = contactUUID
     self.referredByUUID = referredByUUID
-    self.createdOn = createdOn
   }
 }
 
@@ -47,7 +44,6 @@ extension ReferralRecord: FetchableRecord, PersistableRecord {
   public enum Columns {
     public static let contactUUID = Column("contactUUID")
     public static let referredByUUID = Column("referredByUUID")
-    public static let createdOn = Column("createdOn")
   }
   
   /// Table Creation
@@ -59,7 +55,6 @@ extension ReferralRecord: FetchableRecord, PersistableRecord {
         .primaryKey()
       t.column("referredByUUID", .text)
         .references(databaseTableName, onDelete: .setNull) // Handle parent deletion
-      t.column("createdOn", .datetime).notNull()
     }
   }
 }
