@@ -55,7 +55,7 @@ struct NavigationItemScreenResolver: View {
   @ViewBuilder
   private var screen: some View {
     switch item {
-    case .home:     ContactReferralView()
+    case .home:     ContactListView()
     case .profile:  ProfileScreen()
     case .settings: SettingsScreen()
     case .help:     HelpScreen()

@@ -21,9 +21,6 @@ struct RootView: View {
     NavigationHostView()
       .task {
         let hasAuthorizationForContacts = await requestAuthorization()
-        if !hasAuthorizationForContacts {
-          fatalError("Need contacts for app to work :)")
-        }
       }
   }
 }

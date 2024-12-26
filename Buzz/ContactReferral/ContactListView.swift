@@ -1,122 +1,106 @@
+//
+//  ContactListView.swift
+//  Buzz
+//
+//  Created by Travis Baksh on 12/26/24.
+//
+
+
+// ContactListView.swift
 import SwiftUI
-import Dependencies
+import SwiftNavigation
+import SwiftUINavigation
 
 struct ContactListView: View {
-  @Environment(\.theme) private var theme
-  @State private var errorMessage: String? = nil
-  @State private var contacts: [ContactReferralModel] = []
-  @State private var isShowingAddContact = false
-  
-  
-  @Dependency(\.contactReferralClient.fetchContacts)
-  private var fetchContacts
-  
-  var body: some View {
+    @State private var viewModel = ContactReferralViewModel()
+    
+    var body: some View {
+        ZStack {
+            List {
+                contactsSection
+            }
+            .searchable(text: $viewModel.searchText, prompt: "Search contacts")
+            
+            floatingActionButton
+        }
+        .sheet(isPresented: Binding($viewModel.destination.addContact)) {
+            AddContactView(config: .init(
+                availableReferrers: viewModel.availableReferrers,
+                onAdd: { contact in
+                    Task {
+                        await viewModel.addContact(contact)
+                    }
+                }
+            ))
+        }
+        .sheet(item: $viewModel.destination.contactDetails) { contact in
+            ContactDetailsView(config: .init(
+                contact: contact,
+                availableReferrers: viewModel.availableReferrers,
+                onUpdateReferral: { contact, referrer in
+                    Task {
+                        if contact.referredBy == nil {
+                            await viewModel.createReferral(contact: contact, referredBy: referrer)
+                        } else {
+                            await viewModel.updateExistingReferral(model: contact, referredBy: referrer)
+                        }
+                    }
+                }
+            ))
+        }
+        .alert("Error", isPresented: .init(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.viewState = .loaded } }
+        )) {
+            Button("OK") { viewModel.viewState = .loaded }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
+        .task {
+            await viewModel.initialize()
+        }
+        .refreshable {
+            await viewModel.refreshData()
+        }
+    }
+    
+    private var contactsSection: some View {
+        Section("All Contacts") {
+            ForEach(viewModel.filteredContacts) { contact in
+                ContactReferralRow(config: .init(
+                    model: contact,
+                    onTap: {
+                        viewModel.showDetails(for: contact)
+                    }
+                ))
+            }
+        }
+    }
+    
+    private var floatingActionButton: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Button {
+                    viewModel.showAddContact()
+                } label: {
+                    Image(systemName: "person.badge.plus")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .padding(20)
+                        .background(Color.accentColor)
+                        .clipShape(Circle())
+                        .shadow(radius: 4, y: 2)
+                }
+                .padding([.trailing, .bottom], 20)
+            }
+        }
+    }
+}
+
+#Preview {
     NavigationView {
-      ScrollView {
-        VStack(spacing: theme.spacing.md) {
-          if let error = errorMessage {
-            errorView(message: error)
-          } else {
-            contactsList
-          }
-        }
-        .padding(theme.spacing.md)
-      }
-      .background(theme.colors.background)
-      .navigationBarTitleDisplayMode(.large)
-      .navigationTitle("Contacts")
-      .toolbar {
-        ToolbarItem(placement: .navigationBarTrailing) {
-          BuzzUI.Button("Add", style: .tertiary) {
-            isShowingAddContact = true
-          }
-        }
-      }
-      .sheet(isPresented: $isShowingAddContact) {
-        AddContactModal()
-      }
-      .task {
-        do {
-          contacts = try await fetchContacts()
-        }
-        catch {
-          errorMessage = error.localizedDescription
-        }
-      }
+        ContactListView()
     }
-  }
-  
-  private var contactsList: some View {
-    BuzzUI.Card {
-      VStack(spacing: theme.spacing.sm) {
-        ForEach(contacts) { contact in
-          ContactRow(contact: contact)
-          
-          if contact.id != contacts.last?.id {
-            Divider()
-              .background(theme.colors.divider)
-          }
-        }
-      }
-    }
-  }
-  
-  private func errorView(message: String) -> some View {
-    BuzzUI.Card(style: .filled) {
-      VStack(spacing: theme.spacing.md) {
-        Image(systemName: "exclamationmark.triangle")
-          .font(.largeTitle)
-          .foregroundColor(theme.colors.error)
-        
-        BuzzUI.Text(message, style: .bodyLarge)
-      }
-      .frame(maxWidth: .infinity)
-    }
-  }
-}
-
-struct ContactRow: View {
-  @Environment(\.theme) private var theme
-  let contact: ContactReferralModel
-  
-  var body: some View {
-    BuzzUI.ListItem(
-      title: contact.contact.fullName,
-      subtitle: contact.contact.phoneNumbers.first,
-      leading: { contactAvatar },
-      trailing: {
-        Spacer()
-        Image(systemName: "chevron.right")
-          .foregroundColor(theme.colors.textTertiary)
-      }
-    )
-  }
-  
-  @ViewBuilder
-  private var contactAvatar: some View {
-    if let data = contact.contact.avatarData,
-       let uiImage = UIImage(data: data) {
-      Image(uiImage: uiImage)
-        .resizable()
-        .scaledToFill()
-        .frame(width: 40, height: 40)
-        .clipShape(Circle())
-    } else {
-      Image(systemName: "person.circle.fill")
-        .resizable()
-        .frame(width: 40, height: 40)
-        .foregroundColor(theme.colors.textTertiary)
-    }
-  }
-}
-#Preview("Contacts - Light") {
-  ContactListView()
-    .withTheme(AppTheme.light)
-}
-
-#Preview("Contacts - Dark") {
-  ContactListView()
-    .withTheme(AppTheme.dark)
-    .preferredColorScheme(.dark)
 }

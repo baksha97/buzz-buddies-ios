@@ -71,34 +71,19 @@ public struct ContactReferralClient: Sendable {
   public var fetchUnreferredContacts: @Sendable () async throws -> [ContactReferralModel]
 }
 
-// TODO: Need to figure out why this is failing to compile
-// Passing closure as a 'sending' parameter risks causing data races between code in the current task and concurrent execution of the closure
-//fileprivate extension Sequence {
-//  func asyncThrowingTaskGroupMap<T: Sendable>(
-//    _ transform: @Sendable @escaping (Element) async throws -> T
-//  ) async rethrows -> [T] {
-//    try await withThrowingTaskGroup(of: T.self) {
-//      for element in self {
-//        $0.addTask { try await transform(element) }
-//      }
-//      return try await $0.reduce(into: []) { $0.append($1) }
-//    }
-//  }
-//}
-
-fileprivate extension Sequence {
-  func asyncMap<T>(
-    _ transform: (Element) async throws -> T
+// TODO: Figure out why the public extension isn't visible here and we need to have it in this file scope???
+fileprivate extension Sequence where Element: Sendable {
+  func asyncThrowingTaskGroupMap<T: Sendable>(
+    _ transform: @Sendable @escaping (Element) async throws -> T
   ) async rethrows -> [T] {
-    var values = [T]()
-    
-    for element in self {
-      try await values.append(transform(element))
+    try await withThrowingTaskGroup(of: T.self) {
+      for element in self {
+        $0.addTask { try await transform(element) }
+      }
+      return try await $0.reduce(into: []) { $0.append($1) }
     }
-    return values
   }
 }
-
 
 // MARK: - Shared Implementation
 
@@ -124,10 +109,9 @@ extension ContactReferralClient {
       
       let referredContacts: [Contact] = try await referralRecordClient
         .fetchReferredContacts(contactUUID: contact.id)
-        .asyncMap {
+        .asyncThrowingTaskGroupMap {
           try await contactsClient.fetchContactById($0.contactId)
         }
-        .compactMap { $0 }
       return ContactReferralModel(
         contact: contact,
         referredBy: referredBy,
@@ -140,13 +124,13 @@ extension ContactReferralClient {
       fetchContacts: {
         try await contactsClient
           .fetchContacts()
-          .asyncMap(mapToModel(contact:))
+          .asyncThrowingTaskGroupMap(mapToModel(contact:))
       },
       fetchContactById: {
         try await fetchModel(contactId: $0)
       },
       fetchContactsByIds: {
-        try await $0.asyncMap(fetchModel(contactId:))
+        try await $0.asyncThrowingTaskGroupMap(fetchModel(contactId:))
       },
       addContact: { request in
         let addedContact = try await contactsClient.addContact(request.toContactsClientCreateRequest())
@@ -178,7 +162,7 @@ extension ContactReferralClient {
       fetchUnreferredContacts: {
         try await contactsClient
           .fetchContacts()
-          .asyncMap(mapToModel(contact:))
+          .asyncThrowingTaskGroupMap(mapToModel(contact:))
           .filter { $0.referredBy == nil }
       }
     )
