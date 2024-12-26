@@ -115,15 +115,6 @@ extension ContactReferralClient {
       },
       addContact: contactsClient.addContact(contact:),
       createReferral: { contact, referredBy in
-        
-        // 1) Make sure person referring has a record, otherwise create it
-        if let referrer = referredBy,
-           try await referralRecordClient.fetchRecord(referrer.id) == nil {
-          let referrerReferral = ReferralRecord(contactUUID: referrer.id)
-          try await referralRecordClient.createRecord(referrerReferral)
-        }
-        
-        // 2) Create referral, linking the person who referred them
         try await referralRecordClient.createRecord(
           ReferralRecord(
             contactUUID: contact.id,

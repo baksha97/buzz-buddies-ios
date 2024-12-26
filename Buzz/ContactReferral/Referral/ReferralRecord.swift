@@ -33,12 +33,12 @@ extension ReferralRecord: Identifiable {
 extension ReferralRecord: FetchableRecord, PersistableRecord {
   /// Database Table Name
   public static let databaseTableName = "contact_referral_records"
-  
-  /// Association to parent referral
-  static let referrer = belongsTo(ReferralRecord.self, key: "referrer", using: ForeignKey(["referredByUUID"]))
-  
-  /// Association to child referrals
-  static let referrals = hasMany(ReferralRecord.self, key: "referrals", using: ForeignKey(["referredByUUID"]))
+//  
+//  /// Association to parent referral
+//  static let referrer = belongsTo(ReferralRecord.self, key: "referrer", using: ForeignKey(["referredByUUID"]))
+//  
+//  /// Association to child referrals
+//  static let referrals = hasMany(ReferralRecord.self, key: "referrals", using: ForeignKey(["referredByUUID"]))
   
   /// Columns Enum
   public enum Columns {
@@ -54,7 +54,7 @@ extension ReferralRecord: FetchableRecord, PersistableRecord {
         .unique()
         .primaryKey()
       t.column("referredByUUID", .text)
-        .references(databaseTableName, onDelete: .setNull) // Handle parent deletion
+//        .references(databaseTableName, onDelete: .setNull) // Handle parent deletion
     }
   }
 }

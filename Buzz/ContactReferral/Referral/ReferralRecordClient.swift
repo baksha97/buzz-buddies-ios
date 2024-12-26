@@ -22,6 +22,7 @@ public struct ReferralRecordClient: Sendable {
     case notFound
     case deleteFailed
     case hasExistingRecordForContact
+    case invalidReferralRelationship
   }
 }
 
@@ -49,12 +50,25 @@ private extension ReferralRecordClient {
     return ReferralRecordClient(
       createRecord: { referral in
         try await dbQueue.write { db in
+          // Check if there's an existing record for this contact
           let hasExistingRecordForContact = try ReferralRecord
             .filter(ReferralRecord.Columns.contactUUID == referral.contactUUID)
             .fetchOne(db) != nil
           
           if hasExistingRecordForContact {
             throw ReferralRecordClient.Failure.hasExistingRecordForContact
+          }
+          
+          let hasCircularReferralReference = if let referredByUUID = referral.referredByUUID,
+            try ReferralRecord
+            .filter(ReferralRecord.Columns.contactUUID == referredByUUID)
+            .filter(ReferralRecord.Columns.referredByUUID == referral.contactUUID)
+            .fetchOne(db) != nil { true }
+          else { false }
+          
+          // If there's a referrer, check for circular referral
+          if hasCircularReferralReference {
+            throw ReferralRecordClient.Failure.invalidReferralRelationship
           }
           
           try referral.insert(db)

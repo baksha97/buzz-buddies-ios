@@ -71,75 +71,17 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "2267D212-5CE1-46CA-968B-BBE98A6DF9AD"
+            uuid = "1AB9FF42-BF81-4F28-B562-ECF2663ECD9D"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Buzz/ContactReferral/ContactReferralClientTestView.swift"
+            filePath = "Buzz/ContactReferral/Referral/ReferralRecordClient.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "109"
-            endingLineNumber = "109"
-            landmarkName = "loadUnreferredContacts()"
+            startingLineNumber = "74"
+            endingLineNumber = "74"
+            landmarkName = "makeClient(with:)"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "2267D212-5CE1-46CA-968B-BBE98A6DF9AD - 7fbe39869bf6dee3"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(1) suspend resume partial function for Buzz.ContactReferralTestView.loadUnreferredContacts() async -&gt; ()"
-                  moduleName = "Buzz.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClientTestView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "109"
-                  endingLineNumber = "109">
-               </Location>
-               <Location
-                  uuid = "2267D212-5CE1-46CA-968B-BBE98A6DF9AD - a68ff1f1fe1ab496"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(2) await resume partial function for Buzz.ContactReferralTestView.loadUnreferredContacts() async -&gt; ()"
-                  moduleName = "Buzz.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClientTestView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "109"
-                  endingLineNumber = "109">
-               </Location>
-               <Location
-                  uuid = "2267D212-5CE1-46CA-968B-BBE98A6DF9AD - 3560fabec3891ee1"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(3) suspend resume partial function for Buzz.ContactReferralTestView.loadUnreferredContacts() async -&gt; ()"
-                  moduleName = "Buzz.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClientTestView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "109"
-                  endingLineNumber = "109">
-               </Location>
-               <Location
-                  uuid = "2267D212-5CE1-46CA-968B-BBE98A6DF9AD - 5600154a1658bee6"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(4) suspend resume partial function for Buzz.ContactReferralTestView.loadUnreferredContacts() async -&gt; ()"
-                  moduleName = "Buzz.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/travis/Code/buzz-ios/Buzz/ContactReferral/ContactReferralClientTestView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "109"
-                  endingLineNumber = "109">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
