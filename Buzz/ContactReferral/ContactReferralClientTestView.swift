@@ -82,9 +82,9 @@ final class ContactReferralViewModel {
   
   // MARK: - Contact Management
   @MainActor
-  func addContact(_ contact: Contact) async {
+  func addContact(_ request: ContactReferralClientCreateRequest) async {
     await performAction {
-      try await client.addContact(contact)
+      try await client.addContact(request)
       await loadAllData()
       dismissDestination()
     }
@@ -271,6 +271,7 @@ struct ContactReferralRow: View {
       Text(model.contact.fullName)
         .font(.headline)
       
+      Text("ID: \(model.contact.id)")
       if !model.contact.phoneNumbers.isEmpty {
         Text(model.contact.phoneNumbers[0])
           .font(.caption)
@@ -294,7 +295,7 @@ struct ContactReferralRow: View {
 }
 
 struct AddContactView: View {
-  let onAdd: (Contact) async -> Void
+  let onAdd: (ContactReferralClientCreateRequest) async -> Void
   @Environment(\.dismiss) private var dismiss
   
   @State private var givenName = ""
@@ -326,11 +327,11 @@ struct AddContactView: View {
           var allPhoneNumbers = [phoneNumber]
           allPhoneNumbers.append(contentsOf: additionalPhoneNumbers.filter { !$0.isEmpty })
           
-          let contact = Contact(
-            id: UUID(),
+          let contact = ContactReferralClientCreateRequest(
             givenName: givenName,
             familyName: familyName,
-            phoneNumbers: allPhoneNumbers
+            phoneNumbers: allPhoneNumbers,
+            referredBy: nil // TODO: provide the ability to refer
           )
           
           Task {
@@ -356,7 +357,7 @@ struct ContactDetailsView: View {
   let onUpdateReferral: (ContactReferralModel, Contact?) -> Void
   
   @Environment(\.dismiss) private var dismiss
-  @State private var selectedReferrerId: UUID?
+  @State private var selectedReferrerId: Contact.ContactListIdentifier?
   
   var body: some View {
     NavigationView {

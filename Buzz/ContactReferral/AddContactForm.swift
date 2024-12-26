@@ -168,7 +168,7 @@ struct AddContactModal: View {
   private func saveContact() {
     Task {
       try await addContact(
-        Contact(
+        ContactReferralClientCreateRequest(
           givenName: formState.givenName,
           familyName: formState.familyName,
           phoneNumbers: [formState.phoneNumber]

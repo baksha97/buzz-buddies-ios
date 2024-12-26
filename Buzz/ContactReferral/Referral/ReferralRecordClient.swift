@@ -9,11 +9,11 @@ public struct ReferralRecordClient: Sendable {
   //  public var setupDatabase: @Sendable () throws -> Void
   public var createRecord: @Sendable (_ referral: ReferralRecord) async throws -> Void
   public var updateRecord: @Sendable (_ referral: ReferralRecord) async throws -> Void
-  public var fetchRecord: @Sendable (_ contactUUID: UUID) async throws -> ReferralRecord?
+  public var fetchRecord: @Sendable (_ contactUUID: Contact.ContactListIdentifier) async throws -> ReferralRecord?
   public var fetchAllRecords: @Sendable () async throws -> [ReferralRecord]
-  public var fetchReferrer: @Sendable (_ contactUUID: UUID) async throws -> ReferralRecord?
-  public var fetchReferredContacts: @Sendable (_ contactUUID: UUID) async throws -> [ReferralRecord]
-  public var fetchReferralWithRelationships: @Sendable (_ contactUUID: UUID) async throws -> (ReferralRecord?, [ReferralRecord])
+  public var fetchReferrer: @Sendable (_ contactUUID: Contact.ContactListIdentifier) async throws -> ReferralRecord?
+  public var fetchReferredContacts: @Sendable (_ contactUUID: Contact.ContactListIdentifier) async throws -> [ReferralRecord]
+  public var fetchReferralWithRelationships: @Sendable (_ contactUUID: Contact.ContactListIdentifier) async throws -> (ReferralRecord?, [ReferralRecord])
   public var deleteDatabase: @Sendable () async throws -> Void
   
   
@@ -51,10 +51,11 @@ private extension ReferralRecordClient {
     
     return ReferralRecordClient(
       createRecord: { referral in
+        print("Creating Referral \(referral)")
         try await dbQueue.write { db in
           // Check if there's an existing record for this contact
           let hasExistingRecordForContact = try ReferralRecord
-            .filter(ReferralRecord.Columns.contactUUID == referral.contactUUID)
+            .filter(ReferralRecord.Columns.contactUUID == referral.contactId)
             .fetchOne(db) != nil
           
           if hasExistingRecordForContact {
@@ -62,10 +63,10 @@ private extension ReferralRecordClient {
           }
           
           // You can't refer someone who referred you
-          let hasCircularReferralReference = if let referredByUUID = referral.referredByUUID,
+          let hasCircularReferralReference = if let referredByUUID = referral.referredById,
                                                 try ReferralRecord
             .filter(ReferralRecord.Columns.contactUUID == referredByUUID)
-            .filter(ReferralRecord.Columns.referredByUUID == referral.contactUUID)
+            .filter(ReferralRecord.Columns.referredByUUID == referral.contactId)
             .fetchOne(db) != nil { true }
           else { false }
           
@@ -78,19 +79,20 @@ private extension ReferralRecordClient {
         }
       },
       updateRecord: { referral in
+        print("Updating Referral \(referral)")
         try await dbQueue.write { db in
           // Check if there's an existing record for this contact
           let hasNoExistingRecordForContact = try ReferralRecord
-            .filter(ReferralRecord.Columns.contactUUID == referral.contactUUID)
+            .filter(ReferralRecord.Columns.contactUUID == referral.contactId)
             .fetchOne(db) == nil
           
           if hasNoExistingRecordForContact {
             throw ReferralRecordClient.Failure.hasMissingRecordForContact
           }
           // You can't refer someone who referred you
-          let hasCircularReferralReference = if let referredByUUID = referral.referredByUUID,
+          let hasCircularReferralReference = if let referredByUUID = referral.referredById,
                                                 try ReferralRecord
-            .filter(ReferralRecord.Columns.referredByUUID == referral.contactUUID)
+            .filter(ReferralRecord.Columns.referredByUUID == referral.contactId)
             .filter(ReferralRecord.Columns.contactUUID == referredByUUID)
             .fetchOne(db) != nil { true }
           else { false }
@@ -123,7 +125,7 @@ private extension ReferralRecordClient {
             throw Failure.notFound
           }
           
-          guard let referrerUUID = referral.referredByUUID else { return nil }
+          guard let referrerUUID = referral.referredById else { return nil }
           
           return try ReferralRecord
             .filter(ReferralRecord.Columns.contactUUID == referrerUUID)

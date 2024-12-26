@@ -5,14 +5,15 @@ import Foundation
 
 /// A simple domain contact model of our own, separate from `CNContact`.
 public struct Contact: Equatable, Identifiable, Hashable, Sendable {
-  public let id: UUID
+  public typealias ContactListIdentifier = String
+  public let id: ContactListIdentifier
   public var givenName: String
   public var familyName: String
   public var phoneNumbers: [String]
   public var avatarData: Data?
 
   public init(
-    id: UUID = UUID(),
+    id: ContactListIdentifier,
     givenName: String,
     familyName: String,
     phoneNumbers: [String] = [],
@@ -32,6 +33,7 @@ public struct Contact: Equatable, Identifiable, Hashable, Sendable {
 
 extension Contact {
   static let mock: Self = .init(
+    id: "1",
     givenName: "Travis",
     familyName: "Box",
     phoneNumbers: ["222-222-2222"]
@@ -40,22 +42,21 @@ extension Contact {
 
 extension Array where Element == Contact {
   static let mock: Self = [
+    .mock,
     .init(
-      givenName: "Travis",
-      familyName: "Box",
-      phoneNumbers: ["222-222-2222"]
-    ),
-    .init(
+      id: "2",
       givenName: "Trav",
       familyName: "Box",
       phoneNumbers: ["222-222-2222"]
     ),
     .init(
+      id: "3",
       givenName: "Tarv",
       familyName: "Box",
       phoneNumbers: ["222-222-2222"]
     ),
     .init(
+      id: "4",
       givenName: "Travie",
       familyName: "Box",
       phoneNumbers: ["222-222-2222"]

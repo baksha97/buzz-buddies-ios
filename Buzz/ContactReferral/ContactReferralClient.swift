@@ -2,6 +2,40 @@ import Foundation
 import Dependencies
 import DependenciesMacros
 
+/// Model representing the request to add a new contact from the application
+public struct ContactReferralClientCreateRequest: Equatable, Hashable, Sendable {
+  public var givenName: String
+  public var familyName: String
+  public var phoneNumbers: [String]
+  public var avatarData: Data?
+  public var referredBy: Contact?
+
+  public init(
+    givenName: String,
+    familyName: String,
+    phoneNumbers: [String] = [],
+    avatarData: Data? = nil,
+    referredBy: Contact? = nil
+  ) {
+    self.givenName = givenName
+    self.familyName = familyName
+    self.phoneNumbers = phoneNumbers
+    self.avatarData = avatarData
+    self.referredBy = referredBy
+  }
+}
+
+fileprivate extension ContactReferralClientCreateRequest {
+  func toContactsClientCreateRequest() -> ContactClientCreateRequest {
+    .init(
+      givenName: givenName,
+      familyName: familyName,
+      phoneNumbers: phoneNumbers,
+      avatarData: avatarData
+    )
+  }
+}
+
 /// Model representing a referral with detailed contact relationships.
 public struct ContactReferralModel: Sendable, Equatable, Identifiable, Hashable {
   public let contact: Contact          // The primary contact
@@ -14,7 +48,7 @@ public struct ContactReferralModel: Sendable, Equatable, Identifiable, Hashable 
     self.referredContacts = referredContacts
   }
   
-  public var id: UUID {
+  public var id: Contact.ContactListIdentifier {
     contact.id
   }
 }
@@ -26,14 +60,14 @@ public struct ContactReferralClient: Sendable {
   // MARK: Contact Interface
   public var requestContactsAuthorization: @Sendable () async -> Bool = { true }
   public var fetchContacts: @Sendable () async throws -> [ContactReferralModel]
-  public var fetchContactById: @Sendable (_ id: UUID) async throws -> ContactReferralModel
-  public var fetchContactsByIds: @Sendable (_ ids: [UUID]) async throws -> [ContactReferralModel]
+  public var fetchContactById: @Sendable (_ id: Contact.ContactListIdentifier) async throws -> ContactReferralModel
+  public var fetchContactsByIds: @Sendable (_ ids: [Contact.ContactListIdentifier]) async throws -> [ContactReferralModel]
   
-  public var addContact: @Sendable (_ contact: Contact) async throws -> Void
+  public var addContact: @Sendable (_ contact: ContactReferralClientCreateRequest) async throws -> Void
   
   // MARK: Referral Operations
-  public var createReferral: @Sendable (_ contact: UUID, _ referredBy: UUID?) async throws -> Void
-  public var updateReferral: @Sendable (_ contact: UUID, _ referredBy: UUID?) async throws -> Void
+  public var createReferral: @Sendable (_ contact: Contact.ContactListIdentifier, _ referredBy: Contact.ContactListIdentifier?) async throws -> Void
+  public var updateReferral: @Sendable (_ contact: Contact.ContactListIdentifier, _ referredBy: Contact.ContactListIdentifier?) async throws -> Void
   public var fetchUnreferredContacts: @Sendable () async throws -> [ContactReferralModel]
 }
 
@@ -75,7 +109,7 @@ extension ContactReferralClient {
   ) -> ContactReferralClient {
     
     @Sendable
-    func fetchModel(contactId: UUID) async throws -> ContactReferralModel {
+    func fetchModel(contactId: Contact.ContactListIdentifier) async throws -> ContactReferralModel {
       try await mapToModel(contact: contactsClient.fetchContactById(contactId))
     }
     
@@ -84,14 +118,14 @@ extension ContactReferralClient {
       let record = try await referralRecordClient.fetchRecord(contactUUID: contact.id)
       ?? ReferralRecord(contactUUID: contact.id, referredByUUID: nil)
       
-      let referredBy: Contact? = if let referrerUUID = record.referredByUUID {
+      let referredBy: Contact? = if let referrerUUID = record.referredById {
         try await contactsClient.fetchContactById(referrerUUID)
       } else { nil }
       
       let referredContacts: [Contact] = try await referralRecordClient
         .fetchReferredContacts(contactUUID: contact.id)
         .asyncMap {
-          try await contactsClient.fetchContactById($0.contactUUID)
+          try await contactsClient.fetchContactById($0.contactId)
         }
         .compactMap { $0 }
       return ContactReferralModel(
@@ -114,7 +148,17 @@ extension ContactReferralClient {
       fetchContactsByIds: {
         try await $0.asyncMap(fetchModel(contactId:))
       },
-      addContact: contactsClient.addContact(contact:),
+      addContact: { request in
+        let addedContact = try await contactsClient.addContact(request.toContactsClientCreateRequest())
+        if let refferedById = request.referredBy?.id {
+          try await referralRecordClient.createRecord(
+            ReferralRecord(
+              contactUUID: addedContact.id,
+              referredByUUID: refferedById
+            )
+          )
+        }
+      },
       createReferral: { contactId, referredById in
         try await referralRecordClient.createRecord(
           ReferralRecord(
