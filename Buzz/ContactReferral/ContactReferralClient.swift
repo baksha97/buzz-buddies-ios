@@ -32,7 +32,8 @@ public struct ContactReferralClient: Sendable {
   public var addContact: @Sendable (_ contact: Contact) async throws -> Void
   
   // MARK: Referral Operations
-  public var createReferral: @Sendable (_ contact: Contact, _ referredBy: Contact?) async throws -> Void
+  public var createReferral: @Sendable (_ contact: UUID, _ referredBy: UUID?) async throws -> Void
+  public var updateReferral: @Sendable (_ contact: UUID, _ referredBy: UUID?) async throws -> Void
   public var fetchUnreferredContacts: @Sendable () async throws -> [ContactReferralModel]
 }
 
@@ -114,11 +115,19 @@ extension ContactReferralClient {
         try await $0.asyncMap(fetchModel(contactId:))
       },
       addContact: contactsClient.addContact(contact:),
-      createReferral: { contact, referredBy in
+      createReferral: { contactId, referredById in
         try await referralRecordClient.createRecord(
           ReferralRecord(
-            contactUUID: contact.id,
-            referredByUUID: referredBy?.id
+            contactUUID: contactId,
+            referredByUUID: referredById
+          )
+        )
+      },
+      updateReferral: { contactId, referredById in
+        try await referralRecordClient.updateRecord(
+          ReferralRecord(
+            contactUUID: contactId,
+            referredByUUID: referredById
           )
         )
       },

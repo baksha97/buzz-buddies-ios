@@ -162,7 +162,11 @@ struct NewReferralView: View {
         guard let selectedContact = selectedContact else { return }
         
         do {
-            try await contactReferralClient.createReferral(selectedContact, selectedReferrer)
+            try await contactReferralClient
+            .createReferral(
+              selectedContact.id,
+              selectedReferrer?.id
+            )
             isReferralCreated = true
             errorMessage = nil
             await fetchUnreferredContacts()
