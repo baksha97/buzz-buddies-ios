@@ -51,6 +51,8 @@ public struct ContactReferralModel: Sendable, Equatable, Identifiable, Hashable 
   public var id: Contact.ContactListIdentifier {
     contact.id
   }
+  
+  static let mock: Self = .init(contact: .mock, referredBy: nil, referredContacts: [])
 }
 
 
