@@ -1,5 +1,5 @@
 {
-  "originHash" : "f9a17d3f801ed0b06406726c7633e36245a14710166c45b6e8412921c57f78b9",
+  "originHash" : "9ffb1ada710f44de2e9f78f0c12107ab9e519c5d1e4cd43eb4f7df9cec4fd9fc",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -93,28 +93,10 @@
     {
       "identity" : "swift-syntax",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-syntax.git",
+      "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
         "revision" : "0687f71944021d616d34d922343dcef086855920",
         "version" : "600.0.1"
-      }
-    },
-    {
-      "identity" : "vcomponents",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/VakhoKontridze/VComponents",
-      "state" : {
-        "revision" : "33e9c3345b34f59fc2a6a3144a3ca2862ba3519e",
-        "version" : "7.2.1"
-      }
-    },
-    {
-      "identity" : "vcore",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/VakhoKontridze/VCore",
-      "state" : {
-        "revision" : "c230a2dc6f741321ad36ce27d270151bafbed631",
-        "version" : "7.2.0"
       }
     },
     {

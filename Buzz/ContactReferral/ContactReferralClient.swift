@@ -32,7 +32,8 @@ public struct ContactReferralClient: Sendable {
   public var addContact: @Sendable (_ contact: Contact) async throws -> Void
   
   // MARK: Referral Operations
-  public var createReferral: @Sendable (_ contact: Contact, _ referredBy: Contact?) async throws -> Void
+  public var createReferral: @Sendable (_ contact: UUID, _ referredBy: UUID?) async throws -> Void
+  public var updateReferral: @Sendable (_ contact: UUID, _ referredBy: UUID?) async throws -> Void
   public var fetchUnreferredContacts: @Sendable () async throws -> [ContactReferralModel]
 }
 
@@ -52,16 +53,16 @@ public struct ContactReferralClient: Sendable {
 //}
 
 fileprivate extension Sequence {
-    func asyncMap<T>(
-        _ transform: (Element) async throws -> T
-    ) async rethrows -> [T] {
-        var values = [T]()
-
-        for element in self {
-            try await values.append(transform(element))
-        }
-        return values
+  func asyncMap<T>(
+    _ transform: (Element) async throws -> T
+  ) async rethrows -> [T] {
+    var values = [T]()
+    
+    for element in self {
+      try await values.append(transform(element))
     }
+    return values
+  }
 }
 
 
@@ -81,7 +82,7 @@ extension ContactReferralClient {
     @Sendable
     func mapToModel(contact: Contact) async throws -> ContactReferralModel {
       let record = try await referralRecordClient.fetchRecord(contactUUID: contact.id)
-        ?? ReferralRecord(contactUUID: contact.id, referredByUUID: nil)
+      ?? ReferralRecord(contactUUID: contact.id, referredByUUID: nil)
       
       let referredBy: Contact? = if let referrerUUID = record.referredByUUID {
         try await contactsClient.fetchContactById(referrerUUID)
@@ -114,11 +115,19 @@ extension ContactReferralClient {
         try await $0.asyncMap(fetchModel(contactId:))
       },
       addContact: contactsClient.addContact(contact:),
-      createReferral: { contact, referredBy in
+      createReferral: { contactId, referredById in
         try await referralRecordClient.createRecord(
           ReferralRecord(
-            contactUUID: contact.id,
-            referredByUUID: referredBy?.id
+            contactUUID: contactId,
+            referredByUUID: referredById
+          )
+        )
+      },
+      updateReferral: { contactId, referredById in
+        try await referralRecordClient.updateRecord(
+          ReferralRecord(
+            contactUUID: contactId,
+            referredByUUID: referredById
           )
         )
       },

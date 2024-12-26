@@ -144,7 +144,7 @@ final class ContactReferralViewModel {
   func createReferral(contact: ContactReferralModel, referredBy: Contact?) async {
     viewState = .loading
     do {
-      try await client.createReferral(contact.contact, referredBy)
+      try await client.createReferral(contact.contact.id, referredBy?.id)
       await loadContacts()
       await loadUnreferredContacts()
       sheetState = .none
