@@ -11,14 +11,16 @@ class QRMenuModel {
     didSet { generateQRCode() }
   }
   
-  var foregroundColor: Color = .cyan {
-    didSet {
-      generateQRCode()
-    }
+  var qrForegroundColor: Color {
+    qrBackgroundColor.accessibleTextColor
   }
   
-  var backgroundColor: Color {
-    foregroundColor.opacity(0.4)
+  var qrBackgroundColor: Color = .cyan {
+    didSet { generateQRCode()  }
+  }
+  
+  var viewBackgroundColor: Color {
+    qrBackgroundColor.opacity(0.2)
   }
   
   var selectedPixelIndex: Int = 0 {
@@ -34,16 +36,16 @@ class QRMenuModel {
   }
   
   var qrImage: Image? = nil
-
+  
   func generateQRCode() {
-    let fgCGColor = foregroundColor.cgColor ?? CGColor(red: 0, green: 0, blue: 0, alpha: 1)
-    let bgCGColor = backgroundColor.cgColor ?? CGColor(red: 1, green: 1, blue: 1, alpha: 1)
-
+    let fgCGColor = qrForegroundColor.cgColor ?? CGColor(red: 0, green: 0, blue: 0, alpha: 1)
+    let bgCGColor = qrBackgroundColor.cgColor ?? CGColor(red: 1, green: 1, blue: 1, alpha: 1)
+    
     do {
       let pixelShape = PixelShapeData.allCases[selectedPixelIndex].makeShape()
       let eyeShape = EyeShapeData.allCases[selectedEyeIndex].makeShape()
       let pupilShape = PupilShapeData.allCases[selectedPupilIndex].makeShape()
-
+      
       let pngData = try QRCode.build
         .text(urlText)
         .quietZonePixelCount(4)
@@ -54,16 +56,9 @@ class QRMenuModel {
         .pupil.shape(pupilShape)
         .generate
         .image(dimension: 400, representation: .png())
-
-      #if os(iOS) || os(tvOS)
       if let uiImg = UIImage(data: pngData) {
         qrImage = Image(uiImage: uiImg)
       }
-      #elseif os(macOS)
-      if let nsImg = NSImage(data: pngData) {
-        qrImage = Image(nsImage: nsImg)
-      }
-      #endif
     } catch {
       print("Error generating QR code:", error)
       qrImage = nil
@@ -117,9 +112,49 @@ struct CornerRadiusControl: View {
   }
 }
 
-
-
-
+// MARK: - Corner Radius Preset Sheet
+struct CornerRadiusPresetSheet: View {
+  @Environment(\.dismiss) private var dismiss
+  @State var model: QRMenuModel
+  
+  // Define presets
+  private let presets: [(name: String, value: CGFloat)] = [
+    ("Subtle", 8),
+    ("Medium", 20),
+    ("Full Round", 40)
+  ]
+  
+  var body: some View {
+    NavigationView {
+      HStack(spacing: 16) {
+        ForEach(presets, id: \.name) { preset in
+          Button(action: {
+            model.qrPreviewCornerRadius = preset.value
+            dismiss()
+          }) {
+            RoundedRectangle(cornerRadius: preset.value)
+              .fill(model.qrBackgroundColor)
+              .frame(width: 100, height: 100)
+              .overlay(
+                RoundedRectangle(cornerRadius: preset.value)
+                  .stroke(model.qrForegroundColor, lineWidth: 2)
+              )
+          }
+        }
+      }
+      .padding()
+      .navigationTitle("Corner Radius")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .topBarTrailing) {
+          Button("Done") {
+            dismiss()
+          }
+        }
+      }
+    }
+  }
+}
 
 
 // MARK: - Main QR Code Customizer View
@@ -129,27 +164,29 @@ struct QRCodeEditorView: View {
   @State private var isShowingPixelSheet = false
   @State private var isShowingEyeSheet = false
   @State private var isShowingPupilSheet = false
+  @State private var isShowingCornerRadiusSheet = false
+  
   
   var buttonTextColor: Color {
-    return model.backgroundColor.accessibleTextColor
+    return model.qrBackgroundColor.accessibleTextColor
   }
   
   var selectedPixelShapeView: Image {
     PixelShapeData.allCases[model.selectedPixelIndex].reference
-    }
-    
-    var selectedEyeShapeView: Image {
-      EyeShapeData.allCases[model.selectedEyeIndex].reference
-    }
-    
-    var selectedPupilShapeView: Image {
-      PupilShapeData.allCases[model.selectedPupilIndex].reference
-    }
+  }
+  
+  var selectedEyeShapeView: Image {
+    EyeShapeData.allCases[model.selectedEyeIndex].reference
+  }
+  
+  var selectedPupilShapeView: Image {
+    PupilShapeData.allCases[model.selectedPupilIndex].reference
+  }
   
   var body: some View {
     ZStack {
-      // Background Color (Implicit from Foreground)
-      model.backgroundColor
+      model
+        .viewBackgroundColor
         .edgesIgnoringSafeArea(.all)
       
       VStack {
@@ -162,9 +199,8 @@ struct QRCodeEditorView: View {
             .interpolation(.none)
             .scaledToFit()
             .frame(width: 250, height: 250)
-            .background(RoundedRectangle(cornerRadius: 20)
-              .fill(model.backgroundColor.opacity(0.3)))
             .cornerRadius(model.qrPreviewCornerRadius)
+          
         } else {
           ProgressView()
             .frame(width: 250, height: 250)
@@ -176,15 +212,16 @@ struct QRCodeEditorView: View {
         ScrollView {
           VStack(spacing: 12) {
             InlineCustomColorPickerButton(
-              title: "Foreground Color",
-              selectedColor: $model.foregroundColor,
-              textColor: buttonTextColor
+              title: "Background Color",
+              selectedColor: $model.qrBackgroundColor,
+              textColor: buttonTextColor,
+              backgroundColor: model.qrBackgroundColor // Add this parameter
             )
             
             ControlButton(
               title: "Pixel Shape",
               textColor: buttonTextColor,
-              backgroundColor: model.backgroundColor,
+              backgroundColor: model.qrBackgroundColor,
               leading: {
                 Image(systemName: "circle.grid.2x2")
                   .font(.headline)
@@ -198,11 +235,11 @@ struct QRCodeEditorView: View {
             ) {
               isShowingPixelSheet = true
             }
-
+            
             ControlButton(
               title: "Eye Shape",
               textColor: buttonTextColor,
-              backgroundColor: model.backgroundColor,
+              backgroundColor: model.qrBackgroundColor,
               leading: {
                 Image(systemName: "eye.circle")
                   .font(.headline)
@@ -213,13 +250,13 @@ struct QRCodeEditorView: View {
                   .resizable()
                   .scaledToFit()
               }) {
-              isShowingEyeSheet = true
-            }
-
+                isShowingEyeSheet = true
+              }
+            
             ControlButton(
               title: "Pupil Shape",
               textColor: buttonTextColor,
-              backgroundColor: model.backgroundColor,
+              backgroundColor: model.qrBackgroundColor,
               leading: {
                 Image(systemName: "eye.fill")
                   .font(.headline)
@@ -230,11 +267,25 @@ struct QRCodeEditorView: View {
                   .resizable()
                   .scaledToFit()
               }) {
-              isShowingPupilSheet = true
+                isShowingPupilSheet = true
+              }
+            
+            ControlButton(
+              title: "Corner Radius",
+              textColor: buttonTextColor,
+              backgroundColor: model.qrBackgroundColor,
+              leading: {
+                Image(systemName: "square.on.circle")
+                  .font(.headline)
+                  .foregroundColor(buttonTextColor)
+              },
+              trailing: {
+                RoundedRectangle(cornerRadius: model.qrPreviewCornerRadius / 2)
+                  .stroke(buttonTextColor, lineWidth: 2)
+              }
+            ) {
+              isShowingCornerRadiusSheet = true
             }
-
-            CornerRadiusControl(cornerRadius: $model.qrPreviewCornerRadius, textColor: buttonTextColor)
-
           }
           .padding()
         }
@@ -257,6 +308,10 @@ struct QRCodeEditorView: View {
       PupilShapePickerSheet(model: model)
         .presentationDetents([.medium, .fraction(0.4)])
     }
+    .sheet(isPresented: $isShowingCornerRadiusSheet) {
+      CornerRadiusPresetSheet(model: model)
+        .presentationDetents([.height(250)])
+    }
   }
 }
 
@@ -265,13 +320,20 @@ struct InlineCustomColorPickerButton: View {
   var title: String
   @Binding var selectedColor: Color
   var textColor: Color
+  var backgroundColor: Color // Add this property
   
   var body: some View {
     HStack {
+      Image(systemName: "paintbrush.fill") // Add an icon to match other controls
+        .font(.headline)
+        .foregroundColor(textColor)
+      
       Text(title)
         .font(.headline)
         .foregroundColor(textColor)
+      
       Spacer()
+      
       ZStack {
         Circle()
           .fill(selectedColor)
@@ -288,15 +350,19 @@ struct InlineCustomColorPickerButton: View {
       }
     }
     .padding()
-    .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.2)))
+    .background(
+      RoundedRectangle(cornerRadius: 12)
+        .fill(backgroundColor.opacity(0.5)) // Match ControlButton style
+    )
   }
 }
+
 
 struct ControlButton<Leading: View, Trailing: View>: View {
   let title: String
   var textColor: Color
   let backgroundColor: Color
-
+  
   @ViewBuilder let leading: Leading
   @ViewBuilder let trailing: Trailing
   let action: () -> Void
@@ -320,7 +386,10 @@ struct ControlButton<Leading: View, Trailing: View>: View {
           )
       }
       .padding()
-      .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.2)))
+      .background(
+        RoundedRectangle(cornerRadius: 12)
+          .fill(backgroundColor.opacity(0.5))
+      )
     }
   }
 }
