@@ -1,5 +1,5 @@
 {
-  "originHash" : "9ffb1ada710f44de2e9f78f0c12107ab9e519c5d1e4cd43eb4f7df9cec4fd9fc",
+  "originHash" : "6cc562f8b694176a9a56d45c643a3b0e02a31207ada9f40a3edf9d9f7504b263",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -16,6 +16,15 @@
       "location" : "https://github.com/groue/GRDB.swift",
       "state" : {
         "revision" : "84d25dfc9dc1766feb8c80fb04b9f7e2337fb83e"
+      }
+    },
+    {
+      "identity" : "qrcode",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dagronf/QRCode.git",
+      "state" : {
+        "revision" : "a756a82aa4c5514c3b914e43b5db043934723c66",
+        "version" : "25.0.1"
       }
     },
     {
@@ -91,12 +100,30 @@
       }
     },
     {
+      "identity" : "swift-qrcode-generator",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dagronf/swift-qrcode-generator",
+      "state" : {
+        "revision" : "2b1980b825f08a81ccc762b0c4d17fcde9d5e953",
+        "version" : "2.0.2"
+      }
+    },
+    {
       "identity" : "swift-syntax",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
         "revision" : "0687f71944021d616d34d922343dcef086855920",
         "version" : "600.0.1"
+      }
+    },
+    {
+      "identity" : "swiftimagereadwrite",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dagronf/SwiftImageReadWrite",
+      "state" : {
+        "revision" : "42ace2412279f18bc264bc306e96b51c36e12a33",
+        "version" : "1.9.2"
       }
     },
     {
