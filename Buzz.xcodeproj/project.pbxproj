@@ -194,8 +194,6 @@
 				0BDF18752D171F7D006CEAB0 /* BuzzUITests */,
 			);
 			name = BuzzUITests;
-			packageProductDependencies = (
-			);
 			productName = BuzzUITests;
 			productReference = 0BDF18722D171F7D006CEAB0 /* BuzzUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -212,13 +210,16 @@
 				TargetAttributes = {
 					0BDF18562D171F7C006CEAB0 = {
 						CreatedOnToolsVersion = 16.2;
+						ProvisioningStyle = Manual;
 					};
 					0BDF18672D171F7D006CEAB0 = {
 						CreatedOnToolsVersion = 16.2;
+						ProvisioningStyle = Manual;
 						TestTargetID = 0BDF18562D171F7C006CEAB0;
 					};
 					0BDF18712D171F7D006CEAB0 = {
 						CreatedOnToolsVersion = 16.2;
+						ProvisioningStyle = Manual;
 						TestTargetID = 0BDF18562D171F7C006CEAB0;
 					};
 				};
@@ -434,10 +435,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Buzz/Buzz.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Buzz/Preview Content\"";
 				DEVELOPMENT_TEAM = 889ZT45J94;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 889ZT45J94;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -459,6 +462,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = baksha.Buzz;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "match Development baksha.Buzz";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -474,10 +478,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Buzz/Buzz.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Buzz/Preview Content\"";
 				DEVELOPMENT_TEAM = 889ZT45J94;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 889ZT45J94;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -499,6 +505,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = baksha.Buzz;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "match Development baksha.Buzz";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -512,7 +519,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 889ZT45J94;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -535,7 +542,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 889ZT45J94;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -557,7 +564,7 @@
 		0BDF18832D171F7D006CEAB0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 889ZT45J94;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -579,7 +586,7 @@
 		0BDF18842D171F7D006CEAB0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 889ZT45J94;
 				GENERATE_INFOPLIST_FILE = YES;
