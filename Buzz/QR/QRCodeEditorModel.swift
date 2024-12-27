@@ -1,99 +1,213 @@
 import SwiftUI
 import QRCode
 
-class QRCodeEditorModel: ObservableObject {
-    @Published var urlText: String = ""
-    @Published var foregroundColor: Color = .black
-    
-    // Some shape selections.
-    // Use the library’s built-in shapes or just pick a few for a demo:
-    @Published var selectedEyeShape: QRCodeEyeShape = QRCode.EyeShape.Square()
-    @Published var selectedPupilShape: QRCodePupilShape? = nil  // nil means use whatever the eye shape’s pupil shape is
-    @Published var selectedPixelShape: QRCodePixelShape = QRCode.PixelShape.Square()
-    
-    // Whether to show “offPixels,” “border,” or a “logo,” etc.
-    @Published var showOffPixels = false
-    @Published var borderWidth: CGFloat = 0
-    @Published var selectedLogo: UIImage? = nil
-    
-    /// The actual QRCode.Document that reflects all the above settings.
-    /// You can expose this as a computed property:
-    var qrDocument: QRCode.Document {
-        // Create a Document with the user’s text. High error correction if you plan on adding a big logo.
-        let doc = QRCode.Document(utf8String: urlText, errorCorrection: .high)
-        
-        // 1) Color / background
-        doc.design.style.background = QRCode.FillStyle.Solid(.white)  // or transparent, etc.
-        doc.design.style.onPixels = QRCode.FillStyle.Solid(foregroundColor.cgColor ?? CGColor.black)
+// MARK: - Observable Model
+@Observable
+class QRMenuModel {
+  var urlText: String = "https://example.com" {
+    didSet { generateQRCode() }
+  }
+  
+  var foregroundColor: Color = .black {
+    didSet {
+      updateBackgroundColor()
+      generateQRCode()
+    }
+  }
+  
+  var backgroundColor: Color = .white
+  
+  var selectedPixelIndex: Int = 0 {
+    didSet { generateQRCode() }
+  }
+  
+  var selectedEyeIndex: Int = 0 {
+    didSet { generateQRCode() }
+  }
+  
+  var selectedPupilIndex: Int = 0 {
+    didSet { generateQRCode() }
+  }
+  
+  var qrImage: Image? = nil
 
-        // 2) Set shapes
-        doc.design.shape.eye = selectedEyeShape
-        if let pupil = selectedPupilShape {
-            doc.design.shape.pupil = pupil
-        }
-        doc.design.shape.onPixels = selectedPixelShape
-        
-        // 3) Off-pixels (optional)
-        if showOffPixels {
-            // Just do a different shape or color. Something subtle:
-            doc.design.shape.offPixels = QRCode.PixelShape.Circle(insetFraction: 0.3)
-            doc.design.style.offPixels = QRCode.FillStyle.Solid(CGColor(gray: 0.8, alpha: 0.3))
-        } else {
-            // Remove the off-pixels shape so it doesn’t render them
-            doc.design.shape.offPixels = nil
-            doc.design.style.offPixels = nil
-        }
-        
-        // 4) Add a "border" by setting an extra quiet zone if desired
-        if borderWidth > 0 {
-            doc.design.additionalQuietZonePixels = Int(borderWidth)
-        } else {
-            doc.design.additionalQuietZonePixels = 0
-        }
-        
-        // 5) Add a logo if chosen
-        if let logo = selectedLogo?.cgImage {
-            // Easiest method: use the “masking” approach so the middle of the code is forcibly blanked out
-            let logoTemplate = QRCode.LogoTemplate(logoImage: logo)
-            doc.logoTemplate = logoTemplate
-        } else {
-            doc.logoTemplate = nil
-        }
-        
-        return doc
+  func updateBackgroundColor() {
+    backgroundColor = foregroundColor.opacity(0.2)
+  }
+
+  func generateQRCode() {
+    let fgCGColor = foregroundColor.cgColor ?? CGColor(red: 0, green: 0, blue: 0, alpha: 1)
+    let bgCGColor = backgroundColor.cgColor ?? CGColor(red: 1, green: 1, blue: 1, alpha: 1)
+
+    do {
+      let pixelShape = PixelShapeData.allCases[selectedPixelIndex].makeShape()
+      let eyeShape = EyeShapeData.allCases[selectedEyeIndex].makeShape()
+      let pupilShape = PupilShapeData.allCases[selectedPupilIndex].makeShape()
+
+      let pngData = try QRCode.build
+        .text(urlText)
+        .quietZonePixelCount(4)
+        .foregroundColor(fgCGColor)
+        .backgroundColor(bgCGColor)
+        .onPixels.shape(pixelShape)
+        .eye.shape(eyeShape)
+        .pupil.shape(pupilShape)
+        .generate
+        .image(dimension: 400, representation: .png())
+
+      #if os(iOS) || os(tvOS)
+      if let uiImg = UIImage(data: pngData) {
+        qrImage = Image(uiImage: uiImg)
+      }
+      #elseif os(macOS)
+      if let nsImg = NSImage(data: pngData) {
+        qrImage = Image(nsImage: nsImg)
+      }
+      #endif
+    } catch {
+      print("Error generating QR code:", error)
+      qrImage = nil
     }
-    
-    // Quick utility for randomizing shapes or color
-    func randomize() {
-        let shapes: [QRCodePixelShape] = [
-            QRCode.PixelShape.Square(),
-            QRCode.PixelShape.Circle(),
-            QRCode.PixelShape.RoundedPath(cornerRadiusFraction: 0.8),
-            QRCode.PixelShape.Vertical(insetFraction: 0.2),
-            QRCode.PixelShape.Wave()
-        ]
+  }
+}
+
+// MARK: - Main QR Code Customizer View
+struct QRCodeCustomizerView: View {
+  @State private var model = QRMenuModel()
+  
+  @State private var isShowingPixelSheet = false
+  @State private var isShowingEyeSheet = false
+  @State private var isShowingPupilSheet = false
+  
+  var buttonTextColor: Color {
+    return model.backgroundColor.accessibleTextColor
+  }
+  
+  var body: some View {
+    ZStack {
+      // Background Color (Implicit from Foreground)
+      model.backgroundColor
+        .edgesIgnoringSafeArea(.all)
+      
+      VStack {
+        Spacer()
         
-        let eyeShapes: [QRCodeEyeShape] = [
-            QRCode.EyeShape.Square(),
-            QRCode.EyeShape.Circle(),
-            QRCode.EyeShape.Leaf(),
-            QRCode.EyeShape.Teardrop(),
-            QRCode.EyeShape.RoundedRect()
-        ]
+        // QR Code Display
+        if let qrImage = model.qrImage {
+          qrImage
+            .resizable()
+            .interpolation(.none)
+            .scaledToFit()
+            .frame(width: 250, height: 250)
+            .background(RoundedRectangle(cornerRadius: 20)
+              .fill(model.backgroundColor.opacity(0.3)))
+        } else {
+          ProgressView()
+            .frame(width: 250, height: 250)
+        }
         
-        self.selectedPixelShape = shapes.randomElement() ?? QRCode.PixelShape.Square()
-        self.selectedEyeShape   = eyeShapes.randomElement() ?? QRCode.EyeShape.Square()
+        Spacer()
         
-        // Random color
-        let randColor = Color(
-            red:   Double.random(in: 0...1),
-            green: Double.random(in: 0...1),
-            blue:  Double.random(in: 0...1)
-        )
-        self.foregroundColor = randColor
+        // Controls
+        ScrollView {
+          VStack(spacing: 12) {
+            InlineCustomColorPickerButton(
+              title: "Foreground Color",
+              selectedColor: $model.foregroundColor,
+              textColor: buttonTextColor
+            )
+            
+            ControlButton(title: "Pixel Shape", icon: "circle.grid.2x2", textColor: buttonTextColor) {
+              isShowingPixelSheet = true
+            }
+            ControlButton(title: "Eye Shape", icon: "eye.circle", textColor: buttonTextColor) {
+              isShowingEyeSheet = true
+            }
+            ControlButton(title: "Pupil Shape", icon: "eye.fill", textColor: buttonTextColor) {
+              isShowingPupilSheet = true
+            }
+          }
+          .padding()
+        }
         
-        // Toggle other settings
-        self.showOffPixels = Bool.random()
-        self.borderWidth = [0, 2, 4, 8].randomElement() ?? 0
+        Spacer()
+      }
     }
+    .onAppear {
+      model.generateQRCode()
+    }
+    .sheet(isPresented: $isShowingPixelSheet) {
+      PixelShapePickerSheet(model: model)
+        .presentationDetents([.medium, .fraction(0.4)])
+    }
+    .sheet(isPresented: $isShowingEyeSheet) {
+      EyeShapePickerSheet(model: model)
+        .presentationDetents([.medium, .fraction(0.4)])
+    }
+    .sheet(isPresented: $isShowingPupilSheet) {
+      PupilShapePickerSheet(model: model)
+        .presentationDetents([.medium, .fraction(0.4)])
+    }
+  }
+}
+
+// MARK: - Inline Custom Color Picker Button
+struct InlineCustomColorPickerButton: View {
+  var title: String
+  @Binding var selectedColor: Color
+  var textColor: Color
+  
+  var body: some View {
+    HStack {
+      Text(title)
+        .font(.headline)
+        .foregroundColor(textColor)
+      Spacer()
+      ZStack {
+        Circle()
+          .fill(selectedColor)
+          .frame(width: 30, height: 30)
+          .overlay(
+            Circle()
+              .stroke(textColor.opacity(0.5), lineWidth: 1)
+          )
+        ColorPicker("", selection: $selectedColor)
+          .labelsHidden()
+          .opacity(0.02)
+          .frame(width: 30, height: 30)
+          .allowsHitTesting(true)
+      }
+    }
+    .padding()
+    .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.2)))
+  }
+}
+
+// MARK: - Control Button
+struct ControlButton: View {
+  var title: String
+  var icon: String
+  var textColor: Color
+  var action: () -> Void
+  
+  var body: some View {
+    Button(action: action) {
+      HStack {
+        Text(title)
+          .font(.headline)
+          .foregroundColor(textColor)
+        Spacer()
+        Image(systemName: icon)
+          .font(.headline)
+          .foregroundColor(textColor)
+      }
+      .padding()
+      .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.2)))
+    }
+  }
+}
+
+// MARK: - Preview
+#Preview {
+  QRCodeCustomizerView()
 }

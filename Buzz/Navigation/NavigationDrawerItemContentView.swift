@@ -56,7 +56,13 @@ struct NavigationItemScreenResolver: View {
   private var screen: some View {
     switch item {
     case .home:     ContactListView()
-    case .profile:  ProfileScreen()
+    case .profile:  ScrollView {
+      LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))]) {
+        ForEach(PixelShapeData.allCases, id: \.self) { shape in
+          PixelShapeView(shape: shape)
+        }
+      }
+    }
     case .settings: SettingsScreen()
     case .help:     HelpScreen()
     }

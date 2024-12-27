@@ -1,7 +1,17 @@
+//
+//  PixelShapeData.swift
+//  Buzz
+//
+//  Created by Travis Baksh on 12/26/24.
+//
+
+
 import SwiftUI
 import QRCode
 
-enum PixelShapeData: String, CaseIterable {
+enum PixelShapeData: String, CaseIterable, ImageReferenceable {
+  var id: String { rawValue }
+
   case abstract = "Abstract"
   case arrow = "Arrow"
   case blob = "Blob"
@@ -35,55 +45,98 @@ enum PixelShapeData: String, CaseIterable {
   /// Generates the corresponding QRCode shape
   func makeShape() -> QRCodePixelShapeGenerator {
     switch self {
-    case .abstract: return QRCode.PixelShape.Abstract()
-    case .arrow: return QRCode.PixelShape.Arrow()
-    case .blob: return QRCode.PixelShape.Blob()
-    case .circle: return QRCode.PixelShape.Circle()
-    case .circuit: return QRCode.PixelShape.Circuit()
-    case .crt: return QRCode.PixelShape.CRT()
-    case .curvePixel: return QRCode.PixelShape.CurvePixel()
-    case .donut: return QRCode.PixelShape.Donut()
-    case .flower: return QRCode.PixelShape.Flower()
-    case .grid2x2: return QRCode.PixelShape.Grid2x2()
-    case .grid3x3: return QRCode.PixelShape.Grid3x3()
-    case .grid4x4: return QRCode.PixelShape.Grid4x4()
-    case .heart: return QRCode.PixelShape.Heart()
-    case .horizontal: return QRCode.PixelShape.Horizontal()
-    case .pointy: return QRCode.PixelShape.Pointy()
-    case .razor: return QRCode.PixelShape.Razor()
-    case .roundedEndIndent: return QRCode.PixelShape.RoundedEndIndent()
-    case .roundedPath: return QRCode.PixelShape.RoundedPath()
-    case .roundedRect: return QRCode.PixelShape.RoundedRect()
-    case .sharp: return QRCode.PixelShape.Sharp()
-    case .shiny: return QRCode.PixelShape.Shiny()
-    case .spikyCircle: return QRCode.PixelShape.SpikyCircle()
-    case .square: return QRCode.PixelShape.Square()
-    case .squircle: return QRCode.PixelShape.Squircle()
-    case .star: return QRCode.PixelShape.Star()
-    case .stitch: return QRCode.PixelShape.Stitch()
-    case .vertical: return QRCode.PixelShape.Vertical()
-    case .vortex: return QRCode.PixelShape.Vortex()
-    case .wave: return QRCode.PixelShape.Wave()
+    case .abstract: QRCode.PixelShape.Abstract()
+    case .arrow: QRCode.PixelShape.Arrow()
+    case .blob: QRCode.PixelShape.Blob()
+    case .circle: QRCode.PixelShape.Circle()
+    case .circuit: QRCode.PixelShape.Circuit()
+    case .crt: QRCode.PixelShape.CRT()
+    case .curvePixel: QRCode.PixelShape.CurvePixel()
+    case .donut: QRCode.PixelShape.Donut()
+    case .flower: QRCode.PixelShape.Flower()
+    case .grid2x2: QRCode.PixelShape.Grid2x2()
+    case .grid3x3: QRCode.PixelShape.Grid3x3()
+    case .grid4x4: QRCode.PixelShape.Grid4x4()
+    case .heart: QRCode.PixelShape.Heart()
+    case .horizontal: QRCode.PixelShape.Horizontal()
+    case .pointy: QRCode.PixelShape.Pointy()
+    case .razor: QRCode.PixelShape.Razor()
+    case .roundedEndIndent: QRCode.PixelShape.RoundedEndIndent()
+    case .roundedPath: QRCode.PixelShape.RoundedPath()
+    case .roundedRect: QRCode.PixelShape.RoundedRect()
+    case .sharp: QRCode.PixelShape.Sharp()
+    case .shiny: QRCode.PixelShape.Shiny()
+    case .spikyCircle: QRCode.PixelShape.SpikyCircle()
+    case .square: QRCode.PixelShape.Square()
+    case .squircle: QRCode.PixelShape.Squircle()
+    case .star: QRCode.PixelShape.Star()
+    case .stitch: QRCode.PixelShape.Stitch()
+    case .vertical: QRCode.PixelShape.Vertical()
+    case .vortex: QRCode.PixelShape.Vortex()
+    case .wave: QRCode.PixelShape.Wave()
     }
   }
   
-  /// Provides an example image for each shape
-  var example: Image {
-    Image("data_\(self.imageName)", bundle: .main)
-  }
+  /// Provides an example image for each shape using asset catalog symbols
+  var reference: Image {
+     switch self {
+     case .abstract: Image(.dataAbstract)
+     case .arrow: Image(.dataArrow)
+     case .blob: Image(.dataBlob)
+     case .circle: Image(.dataCircle)
+     case .circuit: Image(.dataCircuit)
+     case .crt: Image(.dataCrt)
+     case .curvePixel: Image(.dataCurvePixel)
+     case .donut: Image(.dataDonut)
+     case .flower: Image(.dataFlower)
+     case .grid2x2: Image(.dataGrid2X2)
+     case .grid3x3: Image(.dataGrid3X3)
+     case .grid4x4: Image(.dataGrid4X4)
+     case .heart: Image(.dataHeart)
+     case .horizontal: Image(.dataHorizontal)
+     case .pointy: Image(.dataPointy)
+     case .razor: Image(.dataRazor)
+     case .roundedEndIndent: Image(.dataRoundedEndIndent)
+     case .roundedPath: Image(.dataRoundedPath)
+     case .roundedRect: Image(.dataRoundedRect)
+     case .sharp: Image(.dataSharp)
+     case .shiny: Image(.dataShiny)
+     case .spikyCircle: Image(.dataSpikyCircle)
+     case .square: Image(.dataSquare)
+     case .squircle: Image(.dataSquircle)
+     case .star: Image(.dataStar)
+     case .stitch: Image(.dataStitch)
+     case .vertical: Image(.dataVertical)
+     case .vortex: Image(.dataVortex)
+     case .wave: Image(.dataWave)
+     }
+   }
+}
+
+
+struct PixelShapeView: View {
+  let shape: PixelShapeData
   
-  /// Returns the image name for asset catalog
-  private var imageName: String {
-    switch self {
-    case .curvePixel: return "curvePixel"
-    case .grid2x2: return "grid2x2"
-    case .grid3x3: return "grid3x3"
-    case .grid4x4: return "grid4x4"
-    case .roundedEndIndent: return "roundedEndIndent"
-    case .roundedPath: return "roundedPath"
-    case .roundedRect: return "roundedRect"
-    case .spikyCircle: return "spikyCircle"
-    default: return self.rawValue.lowercased()
+  var body: some View {
+    VStack {
+      shape
+        .reference
+        .resizable()
+        .scaledToFit()
+        .frame(width: 100, height: 100)
+      
+      Text(shape.rawValue)
+        .font(.headline)
+    }
+  }
+}
+
+#Preview {
+  ScrollView {
+    LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))]) {
+      ForEach(PixelShapeData.allCases, id: \.self) { shape in
+        PixelShapeView(shape: shape)
+      }
     }
   }
 }
