@@ -15,6 +15,7 @@ jobs:
         with:
           xcode-version: '16.2'
       - run: fastlane beta
+        continue-on-error: true
         env:
           CI: true
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
