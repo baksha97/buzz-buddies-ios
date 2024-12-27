@@ -30,6 +30,7 @@ final class ContactReferralViewModel {
   var searchText = ""
   
   private(set) var contacts: [ContactReferralModel] = []
+  private var observers: [Contact.ContactListIdentifier: Task<Void, Never>] = [:]
   
   // MARK: - Public Interface
   var filteredContacts: [ContactReferralModel] {
@@ -50,6 +51,12 @@ final class ContactReferralViewModel {
     contacts
   }
   
+  // MARK: - Lifecycle
+  deinit {
+//    observers.values.forEach { $0.cancel() }
+//    observers.removeAll()
+  }
+  
   // MARK: - Navigation Actions
   func showAddContact() {
     destination = .addContact
@@ -68,7 +75,7 @@ final class ContactReferralViewModel {
   func addContact(_ request: ContactReferralClientCreateRequest) async {
     await performAction {
       try await client.addContact(request)
-      await loadAllData()
+      // After adding contact, we'll get the update through the observer
       dismissDestination()
     }
   }
@@ -77,7 +84,7 @@ final class ContactReferralViewModel {
   func createReferral(contact: ContactReferralModel, referredBy: Contact?) async {
     await performAction {
       try await client.createReferral(contact.contact.id, referredBy?.id)
-      await loadAllData()
+      // Updates will come through observers
       dismissDestination()
     }
   }
@@ -86,20 +93,57 @@ final class ContactReferralViewModel {
   func updateExistingReferral(model: ContactReferralModel, referredBy: Contact?) async {
     await performAction {
       try await client.updateReferral(model.contact.id, referredBy?.id)
-      await loadAllData()
+      // Updates will come through observers
       dismissDestination()
     }
   }
   
-  // MARK: - Data Loading
+  // MARK: - Data Loading and Observation
   @MainActor
   func initialize() async {
-    await loadAllData()
+    viewState = .loading
+    do {
+      // First fetch to get initial list of contacts
+      let initialContacts = try await client.fetchContacts()
+      contacts = initialContacts
+      
+      // Start observing each contact
+      for contact in initialContacts {
+        startObserving(contact.contact.id)
+      }
+      
+      viewState = .loaded
+    } catch {
+      viewState = .error("Failed to load contacts: \(error.localizedDescription)")
+    }
   }
   
   @MainActor
-  func refreshData() async {
-    await loadAllData()
+  private func startObserving(_ contactId: Contact.ContactListIdentifier) {
+    // Cancel existing observer if any
+    observers[contactId]?.cancel()
+    
+    // Create new observer
+    let task = Task { [weak self] in
+      guard let self else { return }
+      do {
+        for try await updatedContact in client.observe(contactId) {
+          // Update the contact in our array
+          if let index = self.contacts.firstIndex(where: { $0.contact.id == contactId }) {
+            self.contacts[index] = updatedContact
+          } else {
+            self.contacts.append(updatedContact)
+          }
+        }
+      } catch {
+        // Handle stream errors
+        await MainActor.run {
+          self.viewState = .error("Lost connection to contact \(contactId): \(error.localizedDescription)")
+        }
+      }
+    }
+    
+    observers[contactId] = task
   }
   
   // MARK: - Private Helpers
@@ -108,14 +152,6 @@ final class ContactReferralViewModel {
     return contactList.filter { contact in
       contact.contact.fullName.localizedCaseInsensitiveContains(searchText) ||
       contact.contact.phoneNumbers.contains { $0.contains(searchText) }
-    }
-  }
-  
-  @MainActor
-  private func loadAllData() async {
-    await performAction {
-      let fetchedContacts = try await client.fetchContacts()
-      contacts = fetchedContacts
     }
   }
   
@@ -145,15 +181,11 @@ struct ContactListView: View {
     .sheet(isPresented: Binding($viewModel.destination.addContact)) {
       AddContactView(
         availableReferrers: viewModel.availableReferrers,
-        onSuccess: {
-          Task {
-            await viewModel.refreshData()
-          }
-        }
+        onSuccess: { /* No need for refresh */ }
       )
     }
     .sheet(item: $viewModel.destination.contactDetails) { contact in
-        ContactDetailsView(contact: contact)
+      ContactDetailsView(contact: contact)
     }
     .alert("Error", isPresented: .init(
       get: { viewModel.errorMessage != nil },
@@ -165,9 +197,6 @@ struct ContactListView: View {
     }
     .task {
       await viewModel.initialize()
-    }
-    .refreshable {
-      await viewModel.refreshData()
     }
   }
   

@@ -36,11 +36,6 @@ struct ReferralRecordTestView: View {
         }
         .buttonStyle(.bordered)
         
-        Button("Fetch Referral with Relationships") {
-          fetchReferralWithRelationships()
-        }
-        .buttonStyle(.bordered)
-        
         if let selectedUUID = selectedContactUUID {
           Text("Selected Contact UUID: \(selectedUUID)")
             .font(.caption)
@@ -84,34 +79,6 @@ extension ReferralRecordTestView {
         log.append("ℹ️ Root referral UUID selected for testing.")
       } catch {
         log.append("❌ Failed to save referrals: \(error.localizedDescription)")
-      }
-    }
-  }
-  
-  
-  private func fetchReferralWithRelationships() {
-    guard let selectedUUID = selectedContactUUID else {
-      log.append("⚠️ No contact UUID selected for testing.")
-      return
-    }
-    
-    Task {
-      do {
-        let (referrer, referredContacts) = try await client.fetchReferralWithRelationships(selectedUUID)
-        
-        if let referrer {
-          log.append("🧩 Referrer UUID: \(referrer.contactId)")
-        } else {
-          log.append("ℹ️ No referrer found for this contact.")
-        }
-        
-        log.append("📊 Found \(referredContacts.count) referred contacts:")
-        referredContacts.forEach { child in
-          log.append("➡️ Child Referral UUID: \(child.contactId)")
-        }
-      } catch {
-        log.append("❌ Failed to fetch referral with relationships: \(error.localizedDescription)")
-        print(error.localizedDescription)
       }
     }
   }

@@ -9,7 +9,7 @@ public struct ContactReferralClientCreateRequest: Equatable, Hashable, Sendable 
   public var phoneNumbers: [String]
   public var avatarData: Data?
   public var referredBy: Contact?
-
+  
   public init(
     givenName: String,
     familyName: String,
@@ -71,6 +71,7 @@ public struct ContactReferralClient: Sendable {
   public var createReferral: @Sendable (_ contact: Contact.ContactListIdentifier, _ referredBy: Contact.ContactListIdentifier?) async throws -> Void
   public var updateReferral: @Sendable (_ contact: Contact.ContactListIdentifier, _ referredBy: Contact.ContactListIdentifier?) async throws -> Void
   public var fetchUnreferredContacts: @Sendable () async throws -> [ContactReferralModel]
+  public var observe: @Sendable (_ id: Contact.ContactListIdentifier) -> AsyncThrowingStream<ContactReferralModel, Error> = { _ in .finished() }
 }
 
 // TODO: Figure out why the public extension isn't visible here and we need to have it in this file scope???
@@ -166,6 +167,44 @@ extension ContactReferralClient {
           .fetchContacts()
           .asyncThrowingTaskGroupMap(mapToModel(contact:))
           .filter { $0.referredBy == nil }
+      },
+      observe: { id in
+        // TODO: Check if this is leaking
+        // It would be nicer if we could just map the existing stream with the for-in body and have it be managed by swift itself
+        AsyncThrowingStream { continuation in
+          Task {
+            do {
+              let baseContact = try await contactsClient.fetchContactById(id)
+              
+              for try await (contactRecord, referredByContactRecords) in referralRecordClient.observeRecordWithReferred(contactUUID: id) {
+                // Get the referrer contact if it exists
+                let referrer: Contact? = if let referrerId = contactRecord?.referredById {
+                  try await contactsClient.fetchContactById(referrerId)
+                } else {
+                  nil
+                }
+                
+                // Map the referred contacts records to Contact models
+                let referredContacts = try await referredByContactRecords
+                  .map(\.contactId)
+                  .asyncThrowingTaskGroupMap(contactsClient.fetchContactById(id:))
+                
+                // Create and emit the model
+                let model = ContactReferralModel(
+                  contact: baseContact,
+                  referredBy: referrer,
+                  referredContacts: referredContacts
+                )
+                
+                continuation.yield(model)
+              }
+              
+              continuation.finish()
+            } catch {
+              continuation.finish(throwing: error)
+            }
+          }
+        }
       }
     )
   }

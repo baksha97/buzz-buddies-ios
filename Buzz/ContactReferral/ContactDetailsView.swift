@@ -3,21 +3,40 @@ import Observation
 import Dependencies
 import CasePaths
 
+@MainActor
 @Observable
 final class ContactDetailsViewModel {
     @ObservationIgnored
     @Dependency(\.contactReferralClient) private var client
     
+    // MARK: - State
+    @CasePathable
+    enum ViewState {
+        case loading
+        case loaded
+        case error(String)
+    }
+    
     let contact: ContactReferralModel
+    var viewState: ViewState = .loaded
     var showingContactPicker = false
     var selectedReferrer: Contact?
-    var errorMessage: String?
-    var isLoading = false
     private(set) var availableContacts: [ContactReferralModel] = []
     
     init(contact: ContactReferralModel) {
         self.contact = contact
         self.selectedReferrer = contact.referredBy
+    }
+    
+    // MARK: - Public Interface
+    var errorMessage: String? {
+        if case let .error(message) = viewState { return message }
+        return nil
+    }
+    
+    var isLoading: Bool {
+        if case .loading = viewState { return true }
+        return false
     }
     
     var canUpdateReferrer: Bool {
@@ -28,29 +47,37 @@ final class ContactDetailsViewModel {
         contact.referredBy == nil ? "Add Referrer" : "Update Referrer"
     }
     
+    // MARK: - Actions
+    @MainActor
+    func initialize() async {
+        await fetchAvailableReferrers()
+    }
+    
     @MainActor
     func updateReferral() async {
-        isLoading = true
-        do {
+        await performAction {
             if contact.referredBy == nil {
                 try await client.createReferral(contact.contact.id, selectedReferrer?.id)
             } else {
                 try await client.updateReferral(contact.contact.id, selectedReferrer?.id)
             }
-            isLoading = false
-        } catch {
-            isLoading = false
-            errorMessage = "Failed to update referral: \(error.localizedDescription)"
         }
     }
     
     @MainActor
-    func fetchAvailableReferrers() async {
-        do {
+    private func fetchAvailableReferrers() async {
+        await performAction {
             availableContacts = try await client.fetchContacts()
+        }
+    }
+    
+    private func performAction(_ action: () async throws -> Void) async {
+        viewState = .loading
+        do {
+            try await action()
+            viewState = .loaded
         } catch {
-            errorMessage = "Failed to fetch referrers: \(error.localizedDescription)"
-            availableContacts = []
+            viewState = .error("Operation failed: \(error.localizedDescription)")
         }
     }
 }
@@ -78,16 +105,17 @@ struct ContactDetailsView: View {
             }
             .alert("Error", isPresented: .init(
                 get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
+                set: { if !$0 { viewModel.viewState = .loaded } }
             )) {
-                Button("OK") { viewModel.errorMessage = nil }
+                Button("OK") { viewModel.viewState = .loaded }
             } message: {
                 if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
                 }
             }
-        }.task {
-              await viewModel.fetchAvailableReferrers()
+            .task {
+                await viewModel.initialize()
+            }
         }
     }
     

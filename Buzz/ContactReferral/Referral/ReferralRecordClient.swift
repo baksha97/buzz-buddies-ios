@@ -13,9 +13,8 @@ public struct ReferralRecordClient: Sendable {
   public var fetchAllRecords: @Sendable () async throws -> [ReferralRecord]
   public var fetchReferrer: @Sendable (_ contactUUID: Contact.ContactListIdentifier) async throws -> ReferralRecord?
   public var fetchReferredContacts: @Sendable (_ contactUUID: Contact.ContactListIdentifier) async throws -> [ReferralRecord]
-  public var fetchReferralWithRelationships: @Sendable (_ contactUUID: Contact.ContactListIdentifier) async throws -> (ReferralRecord?, [ReferralRecord])
   public var deleteDatabase: @Sendable () async throws -> Void
-  
+  public var observeRecordWithReferred: @Sendable (_ contactUUID: Contact.ContactListIdentifier) -> AsyncThrowingStream<(ReferralRecord?, [ReferralRecord]), Error> = { _ in .finished() }
   
   public enum Failure: Error {
     case saveFailed
@@ -140,8 +139,12 @@ private extension ReferralRecordClient {
             .fetchAll(db)
         }
       },
-      fetchReferralWithRelationships: { contactUUID in
-        try await dbQueue.read { db in
+      deleteDatabase: {
+        try await dbQueue.erase()
+        setupDatabase()
+      },
+      observeRecordWithReferred: { contactUUID in
+        let observation = ValueObservation.tracking { db in
           let referral = try ReferralRecord
             .filter(ReferralRecord.Columns.contactUUID == contactUUID)
             .fetchOne(db)
@@ -152,10 +155,23 @@ private extension ReferralRecordClient {
           
           return (referral, referredContacts)
         }
-      },
-      deleteDatabase: {
-        try await dbQueue.erase()
-        setupDatabase()
+        
+        return AsyncThrowingStream { continuation in
+          let observer = observation.start(
+            in: dbQueue,
+            scheduling: .async(onQueue: .main),
+            onError: { error in
+              continuation.finish(throwing: error)
+            },
+            onChange: { result in
+              continuation.yield(result)
+            }
+          )
+          
+          continuation.onTermination = { @Sendable _ in
+            observer.cancel()
+          }
+        }
       }
     )
   }
