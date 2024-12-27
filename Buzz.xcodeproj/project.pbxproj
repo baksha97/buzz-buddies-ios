@@ -42,28 +42,17 @@
 		1FD09BCE2D1CCB3F00BCF64E /* Exceptions for "Buzz" folder in "Buzz" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				"Extensions/Sequence+AsyncMap.swift",
+				"ContactReferral/Sequence+AsyncMap.swift",
 			);
 			target = 0BDF18562D171F7C006CEAB0 /* Buzz */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-		1FD09BCF2D1CCB3F00BCF64E /* Exceptions for "Buzz" folder in "Copy Bundle Resources" phase from "Buzz" target */ = {
-			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
-			buildPhase = 0BDF18552D171F7C006CEAB0 /* Resources */;
-			membershipExceptions = (
-				"Extensions/Sequence+AsyncMap.swift",
-			);
-		};
-/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0BDF18592D171F7C006CEAB0 /* Buzz */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				1FD09BCE2D1CCB3F00BCF64E /* Exceptions for "Buzz" folder in "Buzz" target */,
-				1FD09BCF2D1CCB3F00BCF64E /* Exceptions for "Buzz" folder in "Copy Bundle Resources" phase from "Buzz" target */,
 			);
 			path = Buzz;
 			sourceTree = "<group>";
