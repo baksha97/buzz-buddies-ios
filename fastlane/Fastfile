@@ -29,6 +29,7 @@ platform :ios do
       key_content: ENV['APP_STORE_CONNECT_API_KEY_KEY'],
       is_key_content_base64: true
     )
+    enable_automatic_code_signing
     match(
       type: "appstore", 
       api_key: api_key,
