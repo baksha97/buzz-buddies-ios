@@ -19,10 +19,8 @@ platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
     setup_ci if ENV['CI']
-    sync_code_signing(  
-      type: "appstore",
-      readonly: is_ci
-    )
+    get_certificates
+    get_provisioning_profile
     api_key = app_store_connect_api_key(
       key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
       issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
