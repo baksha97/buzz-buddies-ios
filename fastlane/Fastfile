@@ -19,8 +19,8 @@ platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
     setup_ci if ENV['CI']
-    get_certificates
-    get_provisioning_profile
+    # get_certificates
+    # get_provisioning_profile
     api_key = app_store_connect_api_key(
       key_id: ENV['APP_STORE_CONNECT_API_KEY_KEY_ID'],
       issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
@@ -34,6 +34,6 @@ platform :ios do
     )
     increment_build_number(xcodeproj: "Buzz.xcodeproj")
     build_app(scheme: "Buzz")
-    upload_to_testflight
+    upload_to_testflight(api_key: api_key)
   end
 end
