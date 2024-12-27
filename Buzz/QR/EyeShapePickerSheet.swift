@@ -28,7 +28,6 @@ struct EyeShapePickerSheet: View {
         }
         .padding()
       }
-      .navigationTitle("Select Eye Shape")
     }
   }
 }

@@ -28,7 +28,6 @@ struct PupilShapePickerSheet: View {
         }
         .padding()
       }
-      .navigationTitle("Select Pupil Shape")
     }
   }
 }

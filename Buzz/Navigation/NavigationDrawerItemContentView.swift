@@ -1,45 +1,57 @@
 import SwiftUI
 
 enum NavigationDrawerItem: String, CaseIterable {
-  case home      = "Home"
-  case profile   = "Profile"
+  case home      = "Contacts"
+  case qr        = "QR"
   case settings  = "Settings"
   case help      = "Help"
   
   var icon: String {
     switch self {
-    case .home:     return "house.fill"
-    case .profile:  return "person.circle"
-    case .settings: return "gear"
-    case .help:     return "questionmark.circle"
+    case .home:       "person.circle.fill"
+    case .qr:         "person.circle"
+    case .settings:   "gear"
+    case .help:       "questionmark.circle"
     }
   }
 }
 
-typealias OnDrawerItemTap = (NavigationDrawerItem) -> Void
 
 
 struct NavigationDrawerContentView: View {
+  
+  typealias OnDrawerItemTap = (NavigationDrawerItem) -> Void
   let selectedItem: NavigationDrawerItem
   let onItemTap: OnDrawerItemTap
   
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 16) {
-        HeaderSection()
-        Divider()
-        
-        NavigationSection(
-          title: "Main",
-          selectedItem: selectedItem,
-          items: NavigationDrawerItem.allCases,
-          onItemTap: onItemTap
-        )
-        
-        Spacer()
-      }
-      .padding(12)
+    VStack(alignment: .leading, spacing: 16) {
+      HeaderSection()
+//      Divider()
+      NavigationSection(
+        title: nil,
+        selectedItem: selectedItem,
+        items: [.home],
+        onItemTap: onItemTap
+      )
+      Divider()
+      NavigationSection(
+        title: "🔨 In Development",
+        selectedItem: selectedItem,
+        items: [.qr],
+        onItemTap: onItemTap
+      )
+      Spacer()
+      Divider()
+      NavigationSection(
+        title: nil,
+        selectedItem: selectedItem,
+        items: [.settings, .help],
+        onItemTap: onItemTap
+      )
     }
+    .padding(12)
+    
   }
 }
 
@@ -56,13 +68,7 @@ struct NavigationItemScreenResolver: View {
   private var screen: some View {
     switch item {
     case .home:     ContactListView()
-    case .profile:  ScrollView {
-      LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))]) {
-        ForEach(PixelShapeData.allCases, id: \.self) { shape in
-          PixelShapeView(shape: shape)
-        }
-      }
-    }
+    case .qr:  QRCodeCustomizerView()
     case .settings: SettingsScreen()
     case .help:     HelpScreen()
     }
@@ -83,13 +89,13 @@ struct NavigationItemScreenResolver: View {
   
   struct SettingsScreen: View {
     var body: some View {
-      Text("Settings Screen").font(.largeTitle)
+      Text("nothing to see here at the moment sorry").font(.largeTitle)
     }
   }
   
   struct HelpScreen: View {
     var body: some View {
-      Text("Help Screen").font(.largeTitle)
+      Text("i can't help right now").font(.largeTitle)
     }
   }
 }
@@ -114,20 +120,30 @@ private struct HeaderSection: View {
 }
 
 private struct NavigationSection: View {
-  let title: String
+  let title: String?
   let selectedItem: NavigationDrawerItem
   let items: [NavigationDrawerItem]
-  let onItemTap: OnDrawerItemTap
+  let onItemTap: NavigationDrawerContentView.OnDrawerItemTap
   
   var body: some View {
-    Section(header: Text(title).bold()) {
-      ForEach(items, id: \.rawValue) { item in
-        DrawerItemView(
-          item: item,
-          isSelected: selectedItem == item,
-          onTap: onItemTap
-        )
+    if let title {
+      Section(header: Text(title).bold()) {
+        navigationItemViews
       }
+    }
+    else {
+      navigationItemViews
+    }
+  }
+  
+  @ViewBuilder
+  var navigationItemViews: some View {
+    ForEach(items, id: \.rawValue) { item in
+      DrawerItemView(
+        item: item,
+        isSelected: selectedItem == item,
+        onTap: onItemTap
+      )
     }
   }
 }
@@ -135,7 +151,7 @@ private struct NavigationSection: View {
 private struct DrawerItemView: View {
   let item: NavigationDrawerItem
   let isSelected: Bool
-  let onTap: OnDrawerItemTap
+  let onTap: NavigationDrawerContentView.OnDrawerItemTap
   
   var body: some View {
     Button {
