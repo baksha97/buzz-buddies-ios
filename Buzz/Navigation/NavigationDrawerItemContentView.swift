@@ -1,17 +1,19 @@
 import SwiftUI
 
 enum NavigationDrawerItem: String, CaseIterable {
-  case home      = "Contacts"
-  case qr        = "QR"
-  case settings  = "Settings"
-  case help      = "Help"
+  case home                   = "Contacts"
+  case qr                     = "QR Scaffold"
+  case qrCustomization        = "QR Customization"
+  case settings               = "Settings"
+  case help                   = "Help"
   
   var icon: String {
     switch self {
-    case .home:       "person.circle.fill"
-    case .qr:         "person.circle"
-    case .settings:   "gear"
-    case .help:       "questionmark.circle"
+    case .home:"person.circle.fill"
+    case .qr: "house.circle"
+    case .qrCustomization: "camera.circle"
+    case .settings: "gear"
+    case .help: "questionmark.circle"
     }
   }
 }
@@ -36,9 +38,9 @@ struct NavigationDrawerContentView: View {
       )
       Divider()
       NavigationSection(
-        title: "🔨 In Development",
+        title: "In Development",
         selectedItem: selectedItem,
-        items: [.qr],
+        items: [.qr, .qrCustomization],
         onItemTap: onItemTap
       )
       Spacer()
@@ -67,10 +69,11 @@ struct NavigationItemScreenResolver: View {
   @ViewBuilder
   private var screen: some View {
     switch item {
-    case .home:     ContactListView()
-    case .qr:  QRCodeCustomizerView()
-    case .settings: SettingsScreen()
-    case .help:     HelpScreen()
+    case .home:             ContactListView()
+    case .qr:               QRCodeCustomizerView()
+    case .qrCustomization:  QRCodeEditorView()
+    case .settings:         SettingsScreen()
+    case .help:             HelpScreen()
     }
   }
   
