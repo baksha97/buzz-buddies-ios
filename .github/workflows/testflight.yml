@@ -11,9 +11,9 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '16.2.0'
+      # - uses: maxim-lobanov/setup-xcode@v1
+      #   with:
+      #     xcode-version: '16.2.0'
       - run: fastlane beta
         env:
           CI: true
