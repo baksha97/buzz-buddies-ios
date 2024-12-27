@@ -22,7 +22,7 @@ jobs:
           APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+          # FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
       - if: always()
         run: cat /Users/runner/Library/Logs/gym/Buzz-Buzz.log
         
