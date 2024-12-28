@@ -1,7 +1,7 @@
 import SwiftUI
 import QRCode
 
-enum PupilShapeData: String, CaseIterable, ImageReferenceable {
+enum PupilShapeData: String, CaseIterable {
 
   var id: String { rawValue }
   
@@ -41,7 +41,7 @@ enum PupilShapeData: String, CaseIterable, ImageReferenceable {
   case usePixelShape = "Use Pixel Shape"
   
   /// Generates the corresponding QRCode pupil shape
-  func makeShape() -> QRCodePupilShapeGenerator {
+  var generator: QRCodePupilShapeGenerator {
     switch self {
     case .barsHorizontal: return QRCode.PupilShape.BarsHorizontal()
     case .barsHorizontalSquare: return QRCode.PupilShape.SquareBarsHorizontal()
@@ -80,50 +80,11 @@ enum PupilShapeData: String, CaseIterable, ImageReferenceable {
     }
   }
   
-  /// Provides an example image for each shape using Swift-generated asset symbols
-  var reference: Image {
-    switch self {
-    case .barsHorizontal: return Image(.pupilBarsHorizontal)
-    case .barsHorizontalSquare: return Image(.pupilBarsHorizontalSquare)
-    case .barsVertical: return Image(.pupilBarsVertical)
-    case .barsVerticalSquare: return Image(.pupilBarsVerticalSquare)
-    case .blade: return Image(.pupilBlade)
-    case .blobby: return Image(.pupilBlobby)
-    case .circle: return Image(.pupilCircle)
-    case .cloud: return Image(.pupilCloud)
-    case .corneredPixels: return Image(.pupilCorneredPixels)
-    case .cross: return Image(.pupilCross)
-    case .crossCurved: return Image(.pupilCrossCurved)
-    case .crt: return Image(.pupilCrt)
-    case .dotDragHorizontal: return Image(.pupilDotDragHorizontal)
-    case .dotDragVertical: return Image(.pupilDotDragVertical)
-    case .edges: return Image(.pupilEdges)
-    case .explode: return Image(.pupilExplode)
-    case .forest: return Image(.pupilForest)
-    case .hexagonLeaf: return Image(.pupilHexagonLeaf)
-    case .leaf: return Image(.pupilLeaf)
-    case .orbits: return Image(.pupilOrbits)
-    case .pinch: return Image(.pupilPinch)
-    case .pixels: return Image(.pupilPixels)
-    case .roundedOuter: return Image(.pupilRoundedOuter)
-    case .roundedPointingIn: return Image(.pupilRoundedPointingIn)
-    case .roundedPointingOut: return Image(.pupilRoundedPointingOut)
-    case .roundedRect: return Image(.pupilRoundedRect)
-    case .seal: return Image(.pupilSeal)
-    case .shield: return Image(.pupilShield)
-    case .spikyCircle: return Image(.pupilSpikyCircle)
-    case .square: return Image(.pupilSquare)
-    case .squircle: return Image(.pupilSquircle)
-    case .teardrop: return Image(.pupilTeardrop)
-    case .ufo: return Image(.pupilUfo)
-    case .usePixelShape: return Image(.pupilUsePixelShape)
-    }
-  }
+
 }
 
 struct PupilShapeView: View {
   let shape: PupilShapeData
-  
   var body: some View {
     VStack {
       shape

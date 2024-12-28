@@ -1,54 +1,93 @@
+import SwiftUINavigation
 import SwiftUI
 import QRCode
+import CasePaths
+
+struct BuzzQRImage: View {
+  let configuration: BuzzQRConfiguration
+  @State
+  private var error: Error?
+  
+  var body: some View {
+    Group {
+      switch build(with: configuration) {
+      case .success(let image):
+        Image(uiImage: image)
+          .resizable()
+          .interpolation(.none)
+          .scaledToFit()
+          .frame(width: 250, height: 250)
+      case .failure(let error):
+        ErrorMessageView(error: error)
+      }
+    }
+  }
+  
+  func build(with configuration: BuzzQRConfiguration) -> Result<UIImage, Error> {
+    Result {
+      let data = try QRCode.build
+        .text(configuration.text)
+        .quietZonePixelCount(4)
+        .foregroundColor(configuration.foregroundColor.cgColor ?? CGColor(red: 0, green: 0, blue: 100, alpha: 0))
+        .backgroundColor(configuration.backgroundColor.cgColor ?? CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+        .onPixels.shape(configuration.pixel.generator)
+        .eye.shape(configuration.eye.generator)
+        .pupil.shape(configuration.pupil.generator)
+        .background.cornerRadius(configuration.cornerRadius.rawValue)
+        .generate
+        .image(dimension: configuration.dimension, representation: .png())
+      guard let image = UIImage(data: data) else {
+        throw Failure.unableToConvertImage
+      }
+      return image
+    }
+  }
+  
+  enum Failure: Error {
+    case unableToConvertImage
+  }
+}
+
+struct ErrorMessageView: View {
+  let error: Error
+  var body: some View {
+    VStack {
+      Text("Something has went wrong!")
+      Text(error.localizedDescription)
+    }
+  }
+}
+
+@Observable
+class QRMenuModel {
+  var configuration: BuzzQRConfiguration = BuzzQRConfiguration()
+  var picker: PickerSheet? = nil
+  @CasePathable
+  enum PickerSheet {
+    case pixel
+    case eye
+    case pupil
+    case cornerRadius
+  }
+}
+
 
 // MARK: - Main QR Code Customizer View
 struct QRCodeEditorView: View {
   @State private var model = QRMenuModel()
   
-  @State private var isShowingPixelSheet = false
-  @State private var isShowingEyeSheet = false
-  @State private var isShowingPupilSheet = false
-  @State private var isShowingCornerRadiusSheet = false
-  
-  
-  var buttonTextColor: Color {
-    return model.qrBackgroundColor.accessibleTextColor
-  }
-  
-  var selectedPixelShapeView: Image {
-    PixelShapeData.allCases[model.selectedPixelIndex].reference
-  }
-  
-  var selectedEyeShapeView: Image {
-    EyeShapeData.allCases[model.selectedEyeIndex].reference
-  }
-  
-  var selectedPupilShapeView: Image {
-    PupilShapeData.allCases[model.selectedPupilIndex].reference
-  }
-  
   var body: some View {
     ZStack {
       model
-        .viewBackgroundColor
+        .configuration
+        .backgroundColor
+        .opacity(0.2)
         .edgesIgnoringSafeArea(.all)
       
       VStack {
         Spacer()
         
-        // QR Code Display
-        if let qrImage = model.qrImage {
-          qrImage
-            .resizable()
-            .interpolation(.none)
-            .scaledToFit()
-            .frame(width: 250, height: 250)
-          
-        } else {
-          ProgressView()
-            .frame(width: 250, height: 250)
-        }
-        
+        BuzzQRImage(configuration: model.configuration)
         
         
         Spacer()
@@ -58,150 +97,148 @@ struct QRCodeEditorView: View {
           VStack(spacing: 12) {
             ControlTextField(
               placeholder: "URL",
-              textColor: buttonTextColor,
-              backgroundColor: model.qrBackgroundColor,
-              text: $model.urlText
+              textColor: model.configuration.foregroundColor,
+              backgroundColor: model.configuration.backgroundColor,
+              text: $model.configuration.text
             )
+            
+            ControlButton(
+              title: "Corner Radius",
+              textColor: model.configuration.foregroundColor,
+              backgroundColor: model.configuration.backgroundColor,
+              leading: {
+                Image(systemName: "square.on.circle")
+                  .font(.headline)
+                  .foregroundColor(model.configuration.foregroundColor)
+              },
+              trailing: EmptyView.init
+            ) {
+              model.picker = .cornerRadius
+            }
             
             InlineCustomColorPickerButton(
               title: "Background Color",
-              selectedColor: $model.qrBackgroundColor,
-              textColor: buttonTextColor,
-              backgroundColor: model.qrBackgroundColor // Add this parameter
+              selectedColor: $model.configuration.backgroundColor,
+              textColor: model.configuration.foregroundColor,
+              backgroundColor: model.configuration.backgroundColor // Add this parameter
             )
             
             ControlButton(
               title: "Pixel Shape",
-              textColor: buttonTextColor,
-              backgroundColor: model.qrBackgroundColor,
+              textColor: model.configuration.foregroundColor,
+              backgroundColor: model.configuration.backgroundColor,
               leading: {
                 Image(systemName: "circle.grid.2x2")
                   .font(.headline)
-                  .foregroundColor(buttonTextColor)
+                  .foregroundColor(model.configuration.foregroundColor)
               },
               trailing: {
-                selectedPixelShapeView
+                model
+                  .configuration
+                  .pixel
+                  .reference
                   .resizable()
                   .scaledToFit()
               }
             ) {
-              isShowingPixelSheet = true
+              model.picker = .pixel
             }
             
             ControlButton(
               title: "Eye Shape",
-              textColor: buttonTextColor,
-              backgroundColor: model.qrBackgroundColor,
+              textColor: model.configuration.foregroundColor,
+              backgroundColor: model.configuration.backgroundColor,
               leading: {
                 Image(systemName: "eye.circle")
                   .font(.headline)
-                  .foregroundColor(buttonTextColor)
+                  .foregroundColor(model.configuration.foregroundColor)
               },
               trailing: {
-                selectedEyeShapeView
+                model
+                  .configuration
+                  .eye
+                  .reference
                   .resizable()
                   .scaledToFit()
               }) {
-                isShowingEyeSheet = true
+                model.picker = .eye
               }
             
             ControlButton(
               title: "Pupil Shape",
-              textColor: buttonTextColor,
-              backgroundColor: model.qrBackgroundColor,
+              textColor: model.configuration.foregroundColor,
+              backgroundColor: model.configuration.backgroundColor,
               leading: {
                 Image(systemName: "eye.fill")
                   .font(.headline)
-                  .foregroundColor(buttonTextColor)
+                  .foregroundColor(model.configuration.foregroundColor)
               },
               trailing: {
-                selectedPupilShapeView
+                model
+                  .configuration
+                  .pupil
+                  .reference
                   .resizable()
                   .scaledToFit()
               }) {
-                isShowingPupilSheet = true
+                model.picker = .pupil
               }
             
+            Divider()
             ControlButton(
-              title: "Corner Radius",
-              textColor: buttonTextColor,
-              backgroundColor: model.qrBackgroundColor,
+              title: "Shuffle",
+              textColor: model.configuration.foregroundColor,
+              backgroundColor: model.configuration.backgroundColor,
               leading: {
-                Image(systemName: "square.on.circle")
+                Image(systemName: "shuffle")
                   .font(.headline)
-                  .foregroundColor(buttonTextColor)
+                  .foregroundColor(model.configuration.foregroundColor)
               },
-              trailing: {
-                RoundedRectangle(cornerRadius: model.qrPreviewCornerRadius.rawValue / 2)
-                  .stroke(buttonTextColor, lineWidth: 2)
-              }
+              trailing: EmptyView.init
             ) {
-              isShowingCornerRadiusSheet = true
-            }
+              model.configuration = .random(from: model.configuration)
+              }
+          }
           }
           .padding()
-        }
+          
+
         
         Spacer()
           .frame(height: 48)
       }
-      // Floating Shuffle Button
-      VStack {
-        Spacer()
-        HStack {
-          Spacer()
-          Button(action: shuffleQRCode) {
-            Image(systemName: "shuffle")
-              .font(.system(size: 18))
-              .foregroundColor(buttonTextColor)
-              .padding()
-              .background(model.qrBackgroundColor)
-              .clipShape(Circle())
-              .shadow(radius: 5)
-          }
-          .padding()
-        }
-      }
     }
     .navigationBarTitleDisplayMode(.inline)
-    .onAppear {
-      model.generateQRCode()
+    .sheet(isPresented: Binding($model.picker.pixel)) {
+      ImageReferencablePickerSheet(current: model.configuration.pixel) {
+        model.configuration.pixel = $0
+      }.presentationDetents([.medium, .fraction(0.4)])
     }
-    .sheet(isPresented: $isShowingPixelSheet) {
-      PixelShapePickerSheet(model: model)
-        .presentationDetents([.medium, .fraction(0.4)])
+    .sheet(isPresented: Binding($model.picker.eye)) {
+      ImageReferencablePickerSheet(current: model.configuration.eye) {
+        model.configuration.eye = $0
+      }.presentationDetents([.medium, .fraction(0.4)])
     }
-    .sheet(isPresented: $isShowingEyeSheet) {
-      EyeShapePickerSheet(model: model)
-        .presentationDetents([.medium, .fraction(0.4)])
+    .sheet(isPresented: Binding($model.picker.pupil)) {
+      ImageReferencablePickerSheet(current: model.configuration.pupil) {
+        model.configuration.pupil = $0
+      }.presentationDetents([.medium, .fraction(0.4)])
     }
-    .sheet(isPresented: $isShowingPupilSheet) {
-      PupilShapePickerSheet(model: model)
-        .presentationDetents([.medium, .fraction(0.4)])
-    }
-    .sheet(isPresented: $isShowingCornerRadiusSheet) {
-      CornerRadiusPickerSheet(model: model)
-        .presentationDetents([.height(250)])
+    .sheet(isPresented: Binding($model.picker.cornerRadius)) {
+      ImageReferencablePickerSheet2(
+        current: model.configuration.cornerRadius,
+        action: { model.configuration.cornerRadius = $0 },
+        label: { item in
+          let referenceConfiguration: BuzzQRConfiguration = {
+            var temp = model.configuration
+            temp.cornerRadius = item
+            return temp
+          }()
+          BuzzQRImage(configuration: referenceConfiguration)
+        }
+      ).presentationDetents([.height(250)])
     }
   }
-  
-  // MARK: - Shuffle Functionality
-    private func shuffleQRCode() {
-      model.qrBackgroundColor = Color(
-        red: Double.random(in: 0...1),
-        green: Double.random(in: 0...1),
-        blue: Double.random(in: 0...1)
-      )
-      model.selectedPixelIndex = Int.random(in: 0..<PixelShapeData.allCases.count)
-      model.selectedEyeIndex = Int.random(in: 0..<EyeShapeData.allCases.count)
-      model.selectedPupilIndex = Int.random(in: 0..<PupilShapeData.allCases.count)
-      model.qrPreviewCornerRadius = CornerRadiusPickerSheet
-        .Preset
-        .allCases
-        .randomElement()
-      ?? .subtle
-      model.generateQRCode()
-    }
 }
 
 struct ControlTextField: View {
@@ -219,8 +256,8 @@ struct ControlTextField: View {
       
       // TextField
       TextField(placeholder, text: $text)
-      .font(.headline)
-      .foregroundColor(textColor)
+        .font(.headline)
+        .foregroundColor(textColor)
       
       // Trailing icon/clear button
       if !text.isEmpty {
@@ -280,6 +317,7 @@ struct ControlButton<Leading: View, Trailing: View>: View {
     }
   }
 }
+
 
 
 // MARK: - Preview

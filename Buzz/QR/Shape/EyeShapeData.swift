@@ -1,9 +1,9 @@
 import SwiftUI
 import QRCode
 
-enum EyeShapeData: String, CaseIterable, ImageReferenceable {
+enum EyeShapeData: String, CaseIterable {
   var id: String { rawValue }
-
+  
   case barsHorizontal = "Bars Horizontal"
   case barsVertical = "Bars Vertical"
   case circle = "Circle"
@@ -36,7 +36,7 @@ enum EyeShapeData: String, CaseIterable, ImageReferenceable {
   case usePixelShape = "Use Pixel Shape"
   
   /// Generates the corresponding QRCode eye shape
-  func makeShape() -> QRCodeEyeShapeGenerator {
+  var generator: QRCodeEyeShapeGenerator {
     switch self {
     case .barsHorizontal: return QRCode.EyeShape.BarsHorizontal()
     case .barsVertical: return QRCode.EyeShape.BarsVertical()
@@ -71,41 +71,7 @@ enum EyeShapeData: String, CaseIterable, ImageReferenceable {
     }
   }
   
-  /// Provides an example image for each shape using Swift-generated asset symbols
-  var reference: Image {
-    switch self {
-    case .barsHorizontal: return Image(.eyeBarsHorizontal)
-    case .barsVertical: return Image(.eyeBarsVertical)
-    case .circle: return Image(.eyeCircle)
-    case .cloud: return Image(.eyeCloud)
-    case .corneredPixels: return Image(.eyeCorneredPixels)
-    case .crt: return Image(.eyeCrt)
-    case .dotDragHorizontal: return Image(.eyeDotDragHorizontal)
-    case .dotDragVertical: return Image(.eyeDotDragVertical)
-    case .edges: return Image(.eyeEdges)
-    case .explode: return Image(.eyeExplode)
-    case .eye: return Image(.eyeEye)
-    case .fireball: return Image(.eyeFireball)
-    case .headlight: return Image(.eyeHeadlight)
-    case .leaf: return Image(.eyeLeaf)
-    case .peacock: return Image(.eyePeacock)
-    case .pinch: return Image(.eyePinch)
-    case .pixels: return Image(.eyePixels)
-    case .roundedOuter: return Image(.eyeRoundedOuter)
-    case .roundedPointingIn: return Image(.eyeRoundedPointingIn)
-    case .roundedPointingOut: return Image(.eyeRoundedPointingOut)
-    case .roundedRect: return Image(.eyeRoundedRect)
-    case .shield: return Image(.eyeShield)
-    case .spikyCircle: return Image(.eyeSpikyCircle)
-    case .square: return Image(.eyeSquare)
-    case .squarePeg: return Image(.eyeSquarePeg)
-    case .squircle: return Image(.eyeSquircle)
-    case .surroundingBars: return Image(.eyeSurroundingBars)
-    case .teardrop: return Image(.eyeTeardrop)
-    case .ufo: return Image(.eyeUfo)
-    case .usePixelShape: return Image(.eyeUsePixelShape)
-    }
-  }
+
 }
 
 

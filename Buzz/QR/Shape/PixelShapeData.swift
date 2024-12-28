@@ -9,7 +9,7 @@
 import SwiftUI
 import QRCode
 
-enum PixelShapeData: String, CaseIterable, ImageReferenceable {
+enum PixelShapeData: String, CaseIterable {
   var id: String { rawValue }
 
   case abstract = "Abstract"
@@ -43,7 +43,7 @@ enum PixelShapeData: String, CaseIterable, ImageReferenceable {
   case wave = "Wave"
   
   /// Generates the corresponding QRCode shape
-  func makeShape() -> QRCodePixelShapeGenerator {
+  var generator: QRCodePixelShapeGenerator {
     switch self {
     case .abstract: QRCode.PixelShape.Abstract()
     case .arrow: QRCode.PixelShape.Arrow()
@@ -77,40 +77,7 @@ enum PixelShapeData: String, CaseIterable, ImageReferenceable {
     }
   }
   
-  /// Provides an example image for each shape using asset catalog symbols
-  var reference: Image {
-     switch self {
-     case .abstract: Image(.dataAbstract)
-     case .arrow: Image(.dataArrow)
-     case .blob: Image(.dataBlob)
-     case .circle: Image(.dataCircle)
-     case .circuit: Image(.dataCircuit)
-     case .crt: Image(.dataCrt)
-     case .curvePixel: Image(.dataCurvePixel)
-     case .donut: Image(.dataDonut)
-     case .flower: Image(.dataFlower)
-     case .grid2x2: Image(.dataGrid2X2)
-     case .grid3x3: Image(.dataGrid3X3)
-     case .grid4x4: Image(.dataGrid4X4)
-     case .heart: Image(.dataHeart)
-     case .horizontal: Image(.dataHorizontal)
-     case .pointy: Image(.dataPointy)
-     case .razor: Image(.dataRazor)
-     case .roundedEndIndent: Image(.dataRoundedEndIndent)
-     case .roundedPath: Image(.dataRoundedPath)
-     case .roundedRect: Image(.dataRoundedRect)
-     case .sharp: Image(.dataSharp)
-     case .shiny: Image(.dataShiny)
-     case .spikyCircle: Image(.dataSpikyCircle)
-     case .square: Image(.dataSquare)
-     case .squircle: Image(.dataSquircle)
-     case .star: Image(.dataStar)
-     case .stitch: Image(.dataStitch)
-     case .vertical: Image(.dataVertical)
-     case .vortex: Image(.dataVortex)
-     case .wave: Image(.dataWave)
-     }
-   }
+
 }
 
 
