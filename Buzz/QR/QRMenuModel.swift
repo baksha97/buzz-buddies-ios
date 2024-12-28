@@ -12,7 +12,7 @@ import QRCode
 @Observable
 class QRMenuModel {
   
-  var qrPreviewCornerRadius: CornerRadiusPickerSheet.Preset = .medium {
+  var qrPreviewCornerRadius: CornerRadiusPickerSheet.Preset = .subtle {
     didSet { generateQRCode() }
   }
   

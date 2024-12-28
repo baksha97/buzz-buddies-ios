@@ -199,7 +199,7 @@ struct QRCodeEditorView: View {
         .Preset
         .allCases
         .randomElement()
-      ?? .medium
+      ?? .subtle
       model.generateQRCode()
     }
 }

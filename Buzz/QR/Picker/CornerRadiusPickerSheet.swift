@@ -14,24 +14,18 @@ struct CornerRadiusPickerSheet: View {
   @State var model: QRMenuModel
   
   enum Preset: Double, Identifiable, CaseIterable {
-    case subtle = 0
-    case medium = 8
-    case round = 20
+    case none = 0
+    case subtle = 5
+    case rounded = 12
+//    case circle = 24
     
     var id: String {
-      switch self {
-      case .subtle:
-        "Subtle"
-      case .medium:
-        "Medium"
-      case .round:
-        "Round"
-      }
+      "\(rawValue)"
     }
   }
   
   var body: some View {
-    NavigationView {
+    ScrollView(.horizontal) {
       HStack(spacing: 16) {
         ForEach(Preset.allCases, id: \.id) { preset in
           Button(action: {
