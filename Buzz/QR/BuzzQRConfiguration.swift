@@ -9,7 +9,7 @@
 import SwiftUI
 import QRCode
 
-struct BuzzQRConfiguration {
+struct BuzzQRImageConfiguration {
   var text: String = ""
   var backgroundColor: Color = Color(red: 0.25, green: 0.88, blue: 0.82)
   var foregroundColor: Color {
@@ -22,9 +22,9 @@ struct BuzzQRConfiguration {
   var dimension: Int = 400
 }
 
-extension BuzzQRConfiguration {
-  static func random(from existing: Self = .init()) -> BuzzQRConfiguration {
-    BuzzQRConfiguration(
+extension BuzzQRImageConfiguration {
+  static func random(from existing: Self = .init()) -> Self {
+    Self(
       text: existing.text, // Using UUID as sample random text
       backgroundColor: Color(
         red: Double.random(in: 0...1),

@@ -1,5 +1,5 @@
 //
-//  QRPickerSheet.swift
+//  ImageReferenceable.swift
 //  Buzz
 //
 //  Created by Travis Baksh on 12/28/24.
@@ -9,84 +9,11 @@
 import SwiftUI
 import QRCode
 
-protocol ViewReferencable: Identifiable {
-  @MainActor
+protocol ImageReferenceable: Identifiable {
   var reference: Image { get }
 }
 
-struct ImageReferencablePickerSheet2<Item: Identifiable & CaseIterable, ItemReferenceContent: View>: View {
-  typealias OnSelect = (Item) -> Void
-  let current: Item
-  
-  let action: OnSelect?
-  @ViewBuilder
-  let label: (Item) -> ItemReferenceContent
-  
-  
-  private var items: Array<Item> {
-    Array(Item.allCases)
-  }
-  
-  var body: some View {
-    ScrollView {
-      LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 16) {
-        ForEach(items) { item in
-          Button {
-            action?(item)
-          } label: {
-            EmptyView()
-            PickerShapeCell(
-              image: label(item).rendered(),
-              isSelected: item.id == current.id
-            )
-          }
-        }
-        .padding()
-      }
-    }
-  }
-}
-
-struct ImageReferencablePickerSheet<Item: Identifiable & ViewReferencable & CaseIterable>: View {
-  typealias OnSelect = (Item) -> Void
-  let current: Item
-  let onSelect: OnSelect?
-  private var items: Array<Item> { Array(Item.allCases) }
-  
-  var body: some View {
-    ScrollView {
-      LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 16) {
-        ForEach(items) { item in
-          Button {
-            onSelect?(item)
-          } label: {
-            PickerShapeCell(image: item.reference, isSelected: item.id == current.id)
-          }
-        }
-        .padding()
-      }
-    }
-  }
-}
-
-fileprivate struct PickerShapeCell: View {
-  let image: Image
-  let isSelected: Bool
-  
-  var body: some View {
-    image
-      .resizable()
-      .scaledToFit()
-      .frame(width: 80, height: 80)
-//      .cornerRadius(8)
-      .overlay(
-        RoundedRectangle(cornerRadius: 8)
-          .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
-      )
-  }
-}
-
-extension PixelShapeData: ViewReferencable {
+extension PixelShapeData: ImageReferenceable {
   /// Provides an example image for each shape using asset catalog symbols
   var reference: Image {
     switch self {
@@ -123,7 +50,7 @@ extension PixelShapeData: ViewReferencable {
   }
 }
 
-extension EyeShapeData: ViewReferencable {
+extension EyeShapeData: ImageReferenceable {
   /// Provides an example image for each shape using Swift-generated asset symbols
   var reference: Image {
     switch self {
@@ -161,15 +88,7 @@ extension EyeShapeData: ViewReferencable {
   }
 }
 
-extension CornerShapeData: ViewReferencable {
-  var reference: Image {
-    
-  Text("\(rawValue)")
-    .rendered()
-  }
-}
-
-extension PupilShapeData: ViewReferencable {
+extension PupilShapeData: ImageReferenceable {
   /// Provides an example image for each shape using Swift-generated asset symbols
   var reference: Image {
     switch self {
@@ -208,46 +127,5 @@ extension PupilShapeData: ViewReferencable {
     case .ufo: return Image(.pupilUfo)
     case .usePixelShape: return Image(.pupilUsePixelShape)
     }
-  }
-}
-
-fileprivate extension View {
-  func rendered() -> Image {
-//    @Environment(\.displayScale) var displayScale
-    let renderer = ImageRenderer(content: self)
-//    renderer.scale = displayScale
-    let fallback: Image = Image(systemName: "exclamationmark.warninglight.fill")
-    return if let image = renderer.uiImage {
-      Image(uiImage: image)
-    }
-    else {
-      fallback
-    }
-  }
-}
-
-#Preview("PixelShapeData") {
-  ImageReferencablePickerSheet(current: PixelShapeData.abstract) { _ in
-   
-  }
-  
-}
-
-#Preview("EyeShapeData") {
-  ImageReferencablePickerSheet(current: EyeShapeData.cloud) { _ in
-   
-  }
-}
-
-#Preview("PupilShapeData") {
-  ImageReferencablePickerSheet(current: PupilShapeData.barsHorizontal) { _ in
-   
-  }
-}
-
-
-#Preview("CornerShapeData") {
-  ImageReferencablePickerSheet(current: CornerShapeData.subtle) { _ in
-   
   }
 }

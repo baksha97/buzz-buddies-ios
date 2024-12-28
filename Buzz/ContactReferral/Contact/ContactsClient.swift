@@ -172,10 +172,6 @@ private actor ContactsActor {
   // MARK: - Conversion
   
   private func domainContact(from cn: CNContact) -> Contact {
-    // These are actually different for some contacts. I need to rewrite the entire thing to use the identifier string instead
-    if cn.identifier != cn.id.uuidString {
-      print("\(cn.id) ::::: \(cn.identifier)")
-    }
     return Contact(
       id: cn.identifier,
       givenName: cn.givenName,
