@@ -50,7 +50,6 @@ private extension ReferralRecordClient {
     
     return ReferralRecordClient(
       createRecord: { referral in
-        print("Creating Referral \(referral)")
         try await dbQueue.write { db in
           // Check if there's an existing record for this contact
           let hasExistingRecordForContact = try ReferralRecord
@@ -78,7 +77,6 @@ private extension ReferralRecordClient {
         }
       },
       updateRecord: { referral in
-        print("Updating Referral \(referral)")
         try await dbQueue.write { db in
           // Check if there's an existing record for this contact
           let hasNoExistingRecordForContact = try ReferralRecord
@@ -179,9 +177,11 @@ private extension ReferralRecordClient {
 
 extension ReferralRecordClient: DependencyKey {
   public static var liveValue: ReferralRecordClient {
-    //    .makeClient(with: try! DatabaseQueue(path: dbPath))
-    
+    #if DEBUG
+    .makeClient(with: try! DatabaseQueue(path: dbPath))
+    #else
     .makeClient(with: try! DatabaseQueue())
+    #endif
   }
 }
 

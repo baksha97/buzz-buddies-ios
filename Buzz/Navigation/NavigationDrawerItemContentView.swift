@@ -1,9 +1,9 @@
 import SwiftUI
+import Dependencies
 
 enum NavigationDrawerItem: String, CaseIterable {
   case home                   = "Contacts"
-  case qr                     = "QR Scaffold"
-  case qrCustomization        = "QR Customization"
+  case qr                     = "QR Creator"
   case settings               = "Settings"
   case help                   = "Help"
   
@@ -11,20 +11,23 @@ enum NavigationDrawerItem: String, CaseIterable {
     switch self {
     case .home:"person.circle.fill"
     case .qr: "house.circle"
-    case .qrCustomization: "camera.circle"
     case .settings: "gear"
     case .help: "questionmark.circle"
     }
   }
 }
 
-
-
 struct NavigationDrawerContentView: View {
   
   typealias OnDrawerItemTap = (NavigationDrawerItem) -> Void
   let selectedItem: NavigationDrawerItem
   let onItemTap: OnDrawerItemTap
+  
+  @Dependency(\.contactReferralClient.requestContactsAuthorization)
+  private var requestAuthorization
+  
+  @State
+  var hasContactAccess = true
   
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
@@ -40,11 +43,24 @@ struct NavigationDrawerContentView: View {
       NavigationSection(
         title: "In Development",
         selectedItem: selectedItem,
-        items: [.qr, .qrCustomization],
+        items: [.qr],
         onItemTap: onItemTap
       )
       Spacer()
+      
+      if !hasContactAccess {
+        Divider()
+        HStack {
+          Image(systemName: "person.crop.circle.badge.exclamationmark.fill")
+          Text("Buzz is missing contact access!")
+            .font(.callout)
+            .bold()
+        }
+        .foregroundColor(.red)
+      }
+      
       Divider()
+      
       NavigationSection(
         title: nil,
         selectedItem: selectedItem,
@@ -53,7 +69,9 @@ struct NavigationDrawerContentView: View {
       )
     }
     .padding(12)
-    
+    .task {
+      hasContactAccess = await requestAuthorization()
+    }
   }
 }
 
@@ -70,8 +88,7 @@ struct NavigationItemScreenResolver: View {
   private var screen: some View {
     switch item {
     case .home:             ContactListView()
-    case .qr:               QRCodeCustomizerView()
-    case .qrCustomization:  QRCodeEditorView()
+    case .qr:               QRCodeEditorView()
     case .settings:         SettingsScreen()
     case .help:             HelpScreen()
     }
