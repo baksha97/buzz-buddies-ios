@@ -12,7 +12,9 @@ import QRCode
 @Observable
 class QRMenuModel {
   
-  var qrPreviewCornerRadius: CGFloat = 20
+  var qrPreviewCornerRadius: CornerRadiusPickerSheet.Preset = .medium {
+    didSet { generateQRCode() }
+  }
   
   var urlText: String = "" {
     didSet { generateQRCode() }
@@ -22,7 +24,7 @@ class QRMenuModel {
     qrBackgroundColor.accessibleTextColor
   }
   
-  var qrBackgroundColor: Color = .white {
+  var qrBackgroundColor: Color = Color(red: 0.15, green: 0.75, blue: 0.72) {
     didSet { generateQRCode()  }
   }
   
@@ -45,9 +47,30 @@ class QRMenuModel {
   var qrImage: Image? = nil
   
   func generateQRCode() {
-    let fgCGColor = qrForegroundColor.cgColor ?? CGColor(red: 0, green: 0, blue: 0, alpha: 1)
-    let bgCGColor = qrBackgroundColor.cgColor ?? CGColor(red: 1, green: 1, blue: 1, alpha: 1)
     
+    // Foreground color components
+    let qrForegroundColorComponent = qrForegroundColor
+    let fgColorCG = qrForegroundColorComponent.cgColor
+    let fgColorDefault = CGColor(red: 0, green: 0, blue: 0, alpha: 1)
+    let fgCGColor = fgColorCG ?? fgColorDefault
+
+    print("Foreground Components:")
+    print("Original Color: \(qrForegroundColorComponent)")
+    print("CG Color: \(fgColorCG)")
+//    print("Default Color: \(fgColorDefault)")
+//    print("Final Color: \(fgCGColor)")
+
+    // Background color components
+    let qrBackgroundColorComponent = qrBackgroundColor
+    let bgColorCG = qrBackgroundColorComponent.cgColor
+    let bgColorDefault = CGColor(red: 1, green: 1, blue: 1, alpha: 1)
+    let bgCGColor = bgColorCG ?? bgColorDefault
+
+    print("Background Components:")
+    print("Original Color: \(qrBackgroundColorComponent)")
+    print("CG Color: \(bgColorCG)")
+//    print("Default Color: \(bgColorDefault)")
+//    print("Final Color: \(bgCGColor)")
     do {
       let pixelShape = PixelShapeData.allCases[selectedPixelIndex].makeShape()
       let eyeShape = EyeShapeData.allCases[selectedEyeIndex].makeShape()
@@ -61,6 +84,7 @@ class QRMenuModel {
         .onPixels.shape(pixelShape)
         .eye.shape(eyeShape)
         .pupil.shape(pupilShape)
+        .background.cornerRadius(qrPreviewCornerRadius.rawValue)
         .generate
         .image(dimension: 400, representation: .png())
       if let uiImg = UIImage(data: pngData) {

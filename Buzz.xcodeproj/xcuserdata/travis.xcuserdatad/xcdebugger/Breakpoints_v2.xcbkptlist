@@ -103,16 +103,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "A62963C9-8B44-43A1-8353-8530A8A3E23F"
+            uuid = "76FE648B-F32E-418F-BBDA-E4CE662E5C98"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Buzz/ContactReferral/Contact/ContactsClient.swift"
+            filePath = "Buzz/QR/QRMenuModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "177"
-            endingLineNumber = "177"
-            landmarkName = "domainContact(from:)"
+            startingLineNumber = "74"
+            endingLineNumber = "74"
+            landmarkName = "generateQRCode()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

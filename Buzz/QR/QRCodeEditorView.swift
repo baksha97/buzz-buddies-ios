@@ -43,7 +43,6 @@ struct QRCodeEditorView: View {
             .interpolation(.none)
             .scaledToFit()
             .frame(width: 250, height: 250)
-            .cornerRadius(model.qrPreviewCornerRadius)
           
         } else {
           ProgressView()
@@ -133,7 +132,7 @@ struct QRCodeEditorView: View {
                   .foregroundColor(buttonTextColor)
               },
               trailing: {
-                RoundedRectangle(cornerRadius: model.qrPreviewCornerRadius / 2)
+                RoundedRectangle(cornerRadius: model.qrPreviewCornerRadius.rawValue / 2)
                   .stroke(buttonTextColor, lineWidth: 2)
               }
             ) {
@@ -144,24 +143,25 @@ struct QRCodeEditorView: View {
         }
         
         Spacer()
+          .frame(height: 48)
       }
       // Floating Shuffle Button
-            VStack {
-              Spacer()
-              HStack {
-                Spacer()
-                Button(action: shuffleQRCode) {
-                  Image(systemName: "shuffle")
-                    .font(.system(size: 24))
-                    .foregroundColor(buttonTextColor)
-                    .padding()
-                    .background(model.qrBackgroundColor)
-                    .clipShape(Circle())
-                    .shadow(radius: 5)
-                }
-                .padding()
-              }
-            }
+      VStack {
+        Spacer()
+        HStack {
+          Spacer()
+          Button(action: shuffleQRCode) {
+            Image(systemName: "shuffle")
+              .font(.system(size: 18))
+              .foregroundColor(buttonTextColor)
+              .padding()
+              .background(model.qrBackgroundColor)
+              .clipShape(Circle())
+              .shadow(radius: 5)
+          }
+          .padding()
+        }
+      }
     }
     .navigationBarTitleDisplayMode(.inline)
     .onAppear {
@@ -195,7 +195,11 @@ struct QRCodeEditorView: View {
       model.selectedPixelIndex = Int.random(in: 0..<PixelShapeData.allCases.count)
       model.selectedEyeIndex = Int.random(in: 0..<EyeShapeData.allCases.count)
       model.selectedPupilIndex = Int.random(in: 0..<PupilShapeData.allCases.count)
-      model.qrPreviewCornerRadius = CGFloat.random(in: 0...50)
+      model.qrPreviewCornerRadius = CornerRadiusPickerSheet
+        .Preset
+        .allCases
+        .randomElement()
+      ?? .medium
       model.generateQRCode()
     }
 }
