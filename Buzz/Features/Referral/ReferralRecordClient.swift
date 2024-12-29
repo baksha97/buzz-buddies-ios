@@ -17,7 +17,7 @@ public struct ReferralRecordClient: Sendable {
   public var deleteDatabase: @Sendable () async throws -> Void
   public var observeRecordWithReferred: @Sendable (_ contactUUID: Contact.ContactListIdentifier) -> AsyncThrowingStream<(ReferralRecord?, [ReferralRecord]), Error> = { _ in .finished() }
   
-  public enum Failure: Error {
+  public enum Failure: LocalizedError {
     case saveFailed
     case fetchFailed
     case notFound
@@ -25,6 +25,25 @@ public struct ReferralRecordClient: Sendable {
     case hasExistingRecordForContact
     case hasMissingRecordForContact
     case invalidReferralRelationship
+    
+    public var errorDescription: String {
+      switch self {
+      case .saveFailed:
+        "Buzz couldn't save this referral"
+      case .fetchFailed:
+        "Buzz couldn't fetch this referral"
+      case .notFound:
+        "Buzz couldn't find this referral"
+      case .deleteFailed:
+        "Buzz couldn't delete this referral"
+      case .hasExistingRecordForContact:
+        "Buzz couldn't create this contact because contact already has a referral record"
+      case .hasMissingRecordForContact:
+        "Buzz couldn't update this referral since we can't find it"
+      case .invalidReferralRelationship:
+        "Buzz doesn't let you refer someone who referred you"
+      }
+    }
   }
 }
 
