@@ -36,6 +36,7 @@ struct NavigationDrawerContentView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
       HeaderSection()
+        .padding([.leading, .trailing], 12)  // Padding first
       Divider()
       NavigationSection(
         title: nil,
@@ -43,7 +44,8 @@ struct NavigationDrawerContentView: View {
         items: [.home],
         onItemTap: onItemTap
       )
-      
+      .padding([.leading, .trailing], 12)  // Padding first
+
       Spacer()
       if !hasContactAccess {
         Divider()
@@ -54,6 +56,7 @@ struct NavigationDrawerContentView: View {
             .bold()
         }
         .foregroundColor(.red)
+        .padding([.leading, .trailing], 12)  // Padding first
       }
       
       Divider()
@@ -66,16 +69,15 @@ struct NavigationDrawerContentView: View {
         items: [.settings, .help],
         onItemTap: onItemTap
       )
-      
+      .padding([.leading, .trailing], 12)  // Padding first
     }
-    .padding(12)
     .task {
       hasContactAccess = await checkAuthorization()
     }
-    
+    .padding([.leading, .trailing], 2)  // Padding first
     .foregroundColor(configuration.foregroundColor)
-    .background(configuration.backgroundColor)
-    .cornerRadius(8)
+    .background(configuration.backgroundColor)  // Background after padding
+    .ignoresSafeArea(.all, edges: .vertical)  // Make background extend full height
   }
   
   @ViewBuilder
