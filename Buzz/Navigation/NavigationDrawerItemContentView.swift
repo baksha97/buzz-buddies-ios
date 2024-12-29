@@ -85,12 +85,18 @@ struct NavigationDrawerContentView: View {
     Button(action: { onItemTap(.qr) }) {
       VStack {
         BuzzQRImage(configuration: configuration)
-        
         HStack {
-          Text(configuration.text)
-            .bold()
-          Spacer()
-          Image(systemName: "slider.vertical.3")
+          if !configuration.text.trimmingCharacters(in: .whitespaces).isEmpty {
+            Image(systemName: "link.circle.fill")
+            Text(configuration.text)
+              .bold()
+          }
+          else {
+            Image(systemName: "pencil.and.scribble")
+              .italic()
+            Text("Customize URL")
+              .italic()
+          }
         }
       }
     }

@@ -22,7 +22,7 @@ public struct ContactsClient: Sendable {
     case contactNotFound
     case saveFailed
     
-    public var errorDescription: String {
+    public var errorDescription: String? {
       switch self {
       case .unauthorized:
         "Buzz is not authorized to view your contacts"

@@ -26,7 +26,7 @@ public struct ReferralRecordClient: Sendable {
     case hasMissingRecordForContact
     case invalidReferralRelationship
     
-    public var errorDescription: String {
+    public var errorDescription: String? {
       switch self {
       case .saveFailed:
         "Buzz couldn't save this referral"
@@ -80,16 +80,34 @@ private extension ReferralRecordClient {
             throw ReferralRecordClient.Failure.hasExistingRecordForContact
           }
           
+          let existingReferral = try ReferralRecord
+            .filter(ReferralRecord.Columns.contactUUID == referral.contactId)
+            .filter(ReferralRecord.Columns.referredByUUID == referral.referredById)
+            .fetchOne(db)
+          
+          let isOverlappingReferral = if let existingReferral  {
+            existingReferral.referredById != nil
+          } else {
+            false
+          }
+          
           // You can't refer someone who referred you
-          let hasCircularReferralReference = if let referredByUUID = referral.referredById,
-                                                try ReferralRecord
+          let isReferringReferredBy = if let referredByUUID = referral.referredById,
+                                         try ReferralRecord
             .filter(ReferralRecord.Columns.contactUUID == referredByUUID)
             .filter(ReferralRecord.Columns.referredByUUID == referral.contactId)
-            .fetchOne(db) != nil { true }
-          else { false }
+            .fetchOne(db) != nil {
+            true
+          }
+          else {
+            false
+          }
           
           // If there's a referrer, check for circular referral
-          if hasCircularReferralReference {
+          if isOverlappingReferral || isReferringReferredBy {
+            print("Referral relationship invalid")
+            print(isOverlappingReferral)
+            print(isReferringReferredBy)
             throw ReferralRecordClient.Failure.invalidReferralRelationship
           }
           
@@ -118,8 +136,7 @@ private extension ReferralRecordClient {
           if hasCircularReferralReference {
             throw ReferralRecordClient.Failure.invalidReferralRelationship
           }
-          // TODO: Make this update, not upsert --- or make a new function
-          try referral.upsert(db)
+          try referral.update(db)
         }
       },
       fetchRecord: { contactUUID in
