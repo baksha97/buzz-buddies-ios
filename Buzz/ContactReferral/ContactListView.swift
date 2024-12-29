@@ -4,6 +4,7 @@ import SwiftUINavigation
 import Dependencies
 import CasePaths
 import Observation
+import Sharing
 
 @MainActor
 @Observable
@@ -53,8 +54,8 @@ final class ContactReferralViewModel {
   
   // MARK: - Lifecycle
   deinit {
-//    observers.values.forEach { $0.cancel() }
-//    observers.removeAll()
+    //    observers.values.forEach { $0.cancel() }
+    //    observers.removeAll()
   }
   
   // MARK: - Navigation Actions
@@ -169,6 +170,9 @@ final class ContactReferralViewModel {
 struct ContactListView: View {
   @State private var viewModel = ContactReferralViewModel()
   
+  @Shared(.activeQrConfiguration)
+  var configuration
+  
   var body: some View {
     ZStack {
       List {
@@ -223,9 +227,9 @@ struct ContactListView: View {
         } label: {
           Image(systemName: "person.badge.plus")
             .font(.title2)
-            .foregroundColor(.white)
+            .foregroundColor(configuration.foregroundColor)
             .padding(20)
-            .background(Color.accentColor)
+            .background(configuration.backgroundColor)
             .clipShape(Circle())
             .shadow(radius: 4, y: 2)
         }

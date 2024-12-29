@@ -1,7 +1,7 @@
 import SwiftUI
 import QRCode
 
-enum EyeShapeData: String, CaseIterable {
+enum EyeShapeData: String, CaseIterable, Codable {
   var id: String { rawValue }
   
   case barsHorizontal = "Bars Horizontal"

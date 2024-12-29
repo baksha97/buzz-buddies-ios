@@ -1,6 +1,10 @@
+import Sharing
 import SwiftUI
 
 struct NavigationDrawerHostView<MainContent: View, DrawerContent: View>: View {
+  
+  @Shared(.activeQrConfiguration)
+  var configuration
 
   private let overlap: CGFloat = 0.7
   private let overlayColor = Color.gray

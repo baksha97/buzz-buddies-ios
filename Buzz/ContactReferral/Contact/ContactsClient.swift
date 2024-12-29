@@ -196,7 +196,6 @@ extension ContactsClient: DependencyKey {
         try await actor.fetchContacts()
       },
       fetchContactById: { id in
-        print("Fetching: \(id)")
         return try await actor.fetchContactById(id: id)
       },
       fetchContactsByIds: { ids in

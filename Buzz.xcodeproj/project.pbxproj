@@ -14,6 +14,7 @@
 		1F3B0FA32D17B1AB001BFA2F /* DependenciesTestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3B0FA22D17B1AB001BFA2F /* DependenciesTestSupport */; };
 		1FD09BBF2D1C879900BCF64E /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 1FD09BBE2D1C879900BCF64E /* GRDB */; };
 		1FD09CD22D1E38A900BCF64E /* QRCode in Frameworks */ = {isa = PBXBuildFile; productRef = 1FD09CD12D1E38A900BCF64E /* QRCode */; };
+		1FE82EC02D20C08400E1B1C6 /* Sharing in Frameworks */ = {isa = PBXBuildFile; productRef = 1FE82EBF2D20C08400E1B1C6 /* Sharing */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -79,6 +80,7 @@
 				1F3B0F9F2D17B1AB001BFA2F /* Dependencies in Frameworks */,
 				0B4AF0D12D176C460033C3C8 /* SwiftUINavigation in Frameworks */,
 				1FD09CD22D1E38A900BCF64E /* QRCode in Frameworks */,
+				1FE82EC02D20C08400E1B1C6 /* Sharing in Frameworks */,
 				1F3B0FA12D17B1AB001BFA2F /* DependenciesMacros in Frameworks */,
 				1FD09BBF2D1C879900BCF64E /* GRDB in Frameworks */,
 				0B4AF0CF2D176C460033C3C8 /* SwiftNavigation in Frameworks */,
@@ -149,6 +151,7 @@
 				1F3B0FA02D17B1AB001BFA2F /* DependenciesMacros */,
 				1FD09BBE2D1C879900BCF64E /* GRDB */,
 				1FD09CD12D1E38A900BCF64E /* QRCode */,
+				1FE82EBF2D20C08400E1B1C6 /* Sharing */,
 			);
 			productName = Buzz;
 			productReference = 0BDF18572D171F7C006CEAB0 /* Buzz.app */;
@@ -239,6 +242,7 @@
 				1F3B0F9D2D17B1AB001BFA2F /* XCRemoteSwiftPackageReference "swift-dependencies" */,
 				1FD09BBD2D1C879900BCF64E /* XCRemoteSwiftPackageReference "GRDB" */,
 				1FD09CD02D1E38A900BCF64E /* XCRemoteSwiftPackageReference "QRCode" */,
+				1FE82EBE2D20C08400E1B1C6 /* XCRemoteSwiftPackageReference "swift-sharing" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0BDF18582D171F7C006CEAB0 /* Products */;
@@ -682,6 +686,14 @@
 				minimumVersion = 25.0.1;
 			};
 		};
+		1FE82EBE2D20C08400E1B1C6 /* XCRemoteSwiftPackageReference "swift-sharing" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-sharing";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -719,6 +731,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1FD09CD02D1E38A900BCF64E /* XCRemoteSwiftPackageReference "QRCode" */;
 			productName = QRCode;
+		};
+		1FE82EBF2D20C08400E1B1C6 /* Sharing */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FE82EBE2D20C08400E1B1C6 /* XCRemoteSwiftPackageReference "swift-sharing" */;
+			productName = Sharing;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

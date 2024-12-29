@@ -12,7 +12,3 @@ extension Color {
     return luminance > 0.5 ? Color.black.opacity(0.7) : Color.white.opacity(0.9)
   }
 }
-
-
-// MARK: - Color Extension for Optimal Text Contrast
-

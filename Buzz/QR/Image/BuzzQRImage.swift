@@ -62,3 +62,36 @@ fileprivate struct ErrorMessageView: View {
 #Preview {
   BuzzQRImage(configuration: .init())
 }
+
+// WIP for icon QR customization testing
+fileprivate extension Image {
+  
+  /// Converts a SwiftUI Image into a CGImage.
+  /// - Returns: An optional `CGImage` representation of the SwiftUI Image.
+  @MainActor
+  var cgImage: CGImage? {
+    let renderer = ImageRenderer(content: self)
+    return renderer.cgImage
+  }
+  
+  static var appIcon: Self {
+    if let icon = Bundle.main.icon {
+      return Image(uiImage: icon)
+        .resizable()
+    }
+    fatalError()
+  }
+}
+
+// Helper extension to make icon retrieval easier
+fileprivate extension Bundle {
+  var icon: UIImage? {
+    if let icons = infoDictionary?["CFBundleIcons"] as? [String: Any],
+       let primaryIcon = icons["CFBundlePrimaryIcon"] as? [String: Any],
+       let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String],
+       let lastIcon = iconFiles.last {
+      return UIImage(named: lastIcon)
+    }
+    return nil
+  }
+}

@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import Dependencies
+import Sharing
 
 @main
 struct BuzzApp: App {
@@ -28,6 +29,8 @@ struct RootView: View {
 // MARK: - 6) Navigation Host
 
 fileprivate struct NavigationHostView: View {
+  @Shared(.activeQrConfiguration)
+  var configuration
   @Observable
   final class AppState {
     // Controls if the navigation drawer is open or closed
@@ -67,7 +70,8 @@ fileprivate struct NavigationHostView: View {
     )
     .padding()
     .frame(width: 300)
-    .background(colorScheme == .light ? Color(white: 0.95) : Color(white: 0.08))
+    
+    .background(configuration.backgroundColor)
     .offset(x: appState.hasNavigationDrawerOpen ? 0 : -200)
     .animation(.easeInOut, value: appState.hasNavigationDrawerOpen)
     .transition(.move(edge: .leading))

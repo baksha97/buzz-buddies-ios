@@ -1,5 +1,6 @@
 import SwiftUI
 import Dependencies
+import Sharing
 
 enum NavigationDrawerItem: String, CaseIterable {
   case home                   = "Contacts"
@@ -18,6 +19,9 @@ enum NavigationDrawerItem: String, CaseIterable {
 }
 
 struct NavigationDrawerContentView: View {
+  
+  @Shared(.activeQrConfiguration)
+  var configuration
   
   typealias OnDrawerItemTap = (NavigationDrawerItem) -> Void
   let selectedItem: NavigationDrawerItem
@@ -72,6 +76,10 @@ struct NavigationDrawerContentView: View {
     .task {
       hasContactAccess = await requestAuthorization()
     }
+    
+    .foregroundColor(configuration.foregroundColor)
+    .background(configuration.backgroundColor)
+    .cornerRadius(8)
   }
 }
 
@@ -173,6 +181,10 @@ private struct DrawerItemView: View {
   let isSelected: Bool
   let onTap: NavigationDrawerContentView.OnDrawerItemTap
   
+  @Shared(.activeQrConfiguration)
+  var configuration
+  
+  
   var body: some View {
     Button {
       onTap(item)
@@ -183,7 +195,7 @@ private struct DrawerItemView: View {
           .font(.headline)
         Spacer()
       }
-      .foregroundColor(isSelected ? .red : .primary)
+      .foregroundColor(isSelected ? configuration.foregroundColor.accessibleTextColor : configuration.backgroundColor.accessibleTextColor)
       .padding(.vertical, 6)
     }
   }

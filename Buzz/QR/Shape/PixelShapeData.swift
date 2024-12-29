@@ -9,7 +9,7 @@
 import SwiftUI
 import QRCode
 
-enum PixelShapeData: String, CaseIterable {
+enum PixelShapeData: String, CaseIterable, Codable {
   var id: String { rawValue }
 
   case abstract = "Abstract"

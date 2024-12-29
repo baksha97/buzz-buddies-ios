@@ -2,9 +2,12 @@ import SwiftUINavigation
 import SwiftUI
 import QRCode
 import CasePaths
+import Sharing
 
 @Observable
 class QRMenuModel {
+  @ObservationIgnored
+  @Shared(.activeQrConfiguration)
   var configuration = BuzzQRImageConfiguration()
   var picker: PickerSheet? = nil
   @CasePathable
@@ -51,7 +54,9 @@ struct QRCodeEditorView: View {
               },
               trailing: EmptyView.init
             ) {
-              model.configuration = .random(from: model.configuration)
+              model
+                .$configuration
+                .withLock { $0 = .random(from: model.configuration) }
             }
             
             Divider()
@@ -156,24 +161,34 @@ struct QRCodeEditorView: View {
     .ignoresSafeArea(edges: .bottom)
     .navigationBarTitleDisplayMode(.inline)
     .sheet(isPresented: Binding($model.picker.pixel)) {
-      ViewReferenceablePickerSheet(current: model.configuration.pixel) {
-        model.configuration.pixel = $0
+      ViewReferenceablePickerSheet(current: model.configuration.pixel) { pixel in
+          model
+            .$configuration
+            .withLock { $0.pixel = pixel }
       }.presentationDetents([.medium, .fraction(0.4)])
     }
     .sheet(isPresented: Binding($model.picker.eye)) {
-      ViewReferenceablePickerSheet(current: model.configuration.eye) {
-        model.configuration.eye = $0
+      ViewReferenceablePickerSheet(current: model.configuration.eye) { eye in
+        model
+          .$configuration
+          .withLock { $0.eye = eye }
       }.presentationDetents([.medium, .fraction(0.4)])
     }
     .sheet(isPresented: Binding($model.picker.pupil)) {
-      ViewReferenceablePickerSheet(current: model.configuration.pupil) {
-        model.configuration.pupil = $0
+      ViewReferenceablePickerSheet(current: model.configuration.pupil) { pupil in
+        model
+          .$configuration
+          .withLock { $0.pupil = pupil }
       }.presentationDetents([.medium, .fraction(0.4)])
     }
     .sheet(isPresented: Binding($model.picker.cornerRadius)) {
       ViewReferenceablePickerSheet(
         current: model.configuration.cornerRadius,
-        action: { model.configuration.cornerRadius = $0 },
+        action: { cornerRadius in
+          model
+            .$configuration
+            .withLock { $0.cornerRadius = cornerRadius }
+        },
         label: { item in
           let referenceConfiguration = {
             var temp = model.configuration

@@ -1,7 +1,7 @@
 import SwiftUI
 import QRCode
 
-enum PupilShapeData: String, CaseIterable {
+enum PupilShapeData: String, CaseIterable, Codable {
 
   var id: String { rawValue }
   
