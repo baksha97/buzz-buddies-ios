@@ -58,6 +58,8 @@ struct NavigationDrawerContentView: View {
       
       Divider()
       
+      qrNavigationButton
+      
       NavigationSection(
         title: nil,
         selectedItem: selectedItem,
@@ -65,8 +67,6 @@ struct NavigationDrawerContentView: View {
         onItemTap: onItemTap
       )
       
-      Divider()
-      qrNavigationButton
     }
     .padding(12)
     .task {
