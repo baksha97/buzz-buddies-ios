@@ -1,9 +1,10 @@
 import SwiftUI
+import Dependencies
+import Sharing
 
 enum NavigationDrawerItem: String, CaseIterable {
   case home                   = "Contacts"
-  case qr                     = "QR Scaffold"
-  case qrCustomization        = "QR Customization"
+  case qr                     = "QR Creator"
   case settings               = "Settings"
   case help                   = "Help"
   
@@ -11,49 +12,87 @@ enum NavigationDrawerItem: String, CaseIterable {
     switch self {
     case .home:"person.circle.fill"
     case .qr: "house.circle"
-    case .qrCustomization: "camera.circle"
     case .settings: "gear"
     case .help: "questionmark.circle"
     }
   }
 }
 
-
-
 struct NavigationDrawerContentView: View {
+  
+  @Shared(.activeQrConfiguration)
+  var configuration
   
   typealias OnDrawerItemTap = (NavigationDrawerItem) -> Void
   let selectedItem: NavigationDrawerItem
   let onItemTap: OnDrawerItemTap
   
+  @Dependency(\.contactReferralClient.checkAuthorization)
+  private var checkAuthorization
+  
+  @State
+  var hasContactAccess = true
+  
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
       HeaderSection()
-//      Divider()
+      Divider()
       NavigationSection(
         title: nil,
         selectedItem: selectedItem,
         items: [.home],
         onItemTap: onItemTap
       )
-      Divider()
-      NavigationSection(
-        title: "In Development",
-        selectedItem: selectedItem,
-        items: [.qr, .qrCustomization],
-        onItemTap: onItemTap
-      )
+      
       Spacer()
+      if !hasContactAccess {
+        Divider()
+        HStack {
+          Image(systemName: "person.crop.circle.badge.exclamationmark.fill")
+          Text("Buzz is missing contact access!")
+            .font(.callout)
+            .bold()
+        }
+        .foregroundColor(.red)
+      }
+      
       Divider()
+      
+      qrNavigationButton
+      
       NavigationSection(
         title: nil,
         selectedItem: selectedItem,
         items: [.settings, .help],
         onItemTap: onItemTap
       )
+      
     }
     .padding(12)
+    .task {
+      hasContactAccess = await checkAuthorization()
+    }
     
+    .foregroundColor(configuration.foregroundColor)
+    .background(configuration.backgroundColor)
+    .cornerRadius(8)
+  }
+  
+  @ViewBuilder
+  var qrNavigationButton: some View {
+    Button(action: { onItemTap(.qr) }) {
+      VStack {
+        BuzzQRImage(configuration: configuration)
+        
+        HStack {
+          Text(configuration.text)
+            .bold()
+          Spacer()
+          Image(systemName: "slider.vertical.3")
+        }
+      }
+    }
+    .buttonStyle(ElevatedButtonStyle(fillColor: configuration.backgroundColor))
   }
 }
 
@@ -70,8 +109,7 @@ struct NavigationItemScreenResolver: View {
   private var screen: some View {
     switch item {
     case .home:             ContactListView()
-    case .qr:               QRCodeCustomizerView()
-    case .qrCustomization:  QRCodeEditorView()
+    case .qr:               QRCodeEditorView()
     case .settings:         SettingsScreen()
     case .help:             HelpScreen()
     }
@@ -107,10 +145,6 @@ private struct HeaderSection: View {
   var body: some View {
     VStack(spacing: 8) {
       HStack {
-        Image(systemName: "app.fill")
-          .resizable()
-          .frame(width: 40, height: 40)
-        
         VStack(alignment: .leading) {
           Text("Buzz App").bold()
           Text("v1.0.0")
@@ -156,6 +190,10 @@ private struct DrawerItemView: View {
   let isSelected: Bool
   let onTap: NavigationDrawerContentView.OnDrawerItemTap
   
+  @Shared(.activeQrConfiguration)
+  var configuration
+  
+  
   var body: some View {
     Button {
       onTap(item)
@@ -166,7 +204,7 @@ private struct DrawerItemView: View {
           .font(.headline)
         Spacer()
       }
-      .foregroundColor(isSelected ? .red : .primary)
+      .foregroundColor(isSelected ? configuration.foregroundColor.accessibleTextColor : configuration.backgroundColor.accessibleTextColor)
       .padding(.vertical, 6)
     }
   }
@@ -181,4 +219,23 @@ private struct DrawerItemView: View {
 
 #Preview("Navigation Resolver") {
   NavigationItemScreenResolver(item: .settings)
+}
+
+struct ElevatedButtonStyle: ButtonStyle {
+  let fillColor: Color
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .padding()
+      .background(
+        RoundedRectangle(cornerRadius: 8)
+          .fill(fillColor)
+          .shadow(
+            color: .black.opacity(configuration.isPressed ? 0.1 : 0.2),
+            radius: configuration.isPressed ? 2 : 4,
+            x: 0,
+            y: configuration.isPressed ? 1 : 2
+          )
+      )
+      .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+  }
 }

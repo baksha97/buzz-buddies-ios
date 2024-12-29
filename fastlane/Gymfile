@@ -10,5 +10,5 @@
 
 # sdk("iphoneos9.0")
 
-output_directory("./")
+output_directory("./build")    # store the ipa in this folder
 xcargs("-skipMacroValidation")

@@ -1,20 +1,8 @@
 import SwiftUI
 import SwiftData
 import Dependencies
-
-// MARK: - Color Extension for Optimal Text Contrast
-extension Color {
-  var accessibleTextColor: Color {
-    let components = UIColor(self).cgColor.components ?? [0, 0, 0, 1]
-    let red = components[0]
-    let green = components[1]
-    let blue = components[2]
-    
-    let luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue)
-    
-    return luminance > 0.5 ? Color.black.opacity(0.7) : Color.white.opacity(0.9)
-  }
-}
+import Sharing
+import SwiftUINavigation
 
 @main
 struct BuzzApp: App {
@@ -26,22 +14,69 @@ struct BuzzApp: App {
     }
   }
 }
+
 struct RootView: View {
   
   @Dependency(\.contactReferralClient.requestContactsAuthorization)
   private var requestAuthorization
   
+  @CasePathable
+  enum Destination {
+    case scannedQr(request: ContactSearchRequest)
+  }
+  
+  @State
+  var destination: Destination? = nil
+  
   var body: some View {
     NavigationHostView()
       .task {
-        let hasAuthorizationForContacts = await requestAuthorization()
+        _ =  await requestAuthorization()
+      }
+      .onOpenURL { url in
+        guard url.scheme == "buzzapp" else { return }
+        guard let parsed = parse(url: url) else {
+          print("failed to parse link \(url)")
+          return
+        }
+        destination = .scannedQr(
+          request: .init(
+            id: parsed.id,
+            givenName: parsed.gn,
+            familyName: parsed.fn,
+            phoneNumber: parsed.phoneNumbers.first ?? ""
+          )
+        )
+      }
+      .sheet(item: $destination.scannedQr) { request in
+        ContactSearchView(searchRequest: request)
       }
   }
+  
+  func parse(url: URL) -> (id: String, gn: String, fn: String, phoneNumbers: [String])? {
+      guard url.scheme == "buzzapp", url.host == "referral" else {
+        return nil
+      }
+      
+      let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
+      let id = queryItems?.first(where: { $0.name == "id" })?.value
+      let gn = queryItems?.first(where: { $0.name == "gn" })?.value
+      let fn = queryItems?.first(where: { $0.name == "fn" })?.value
+      let phoneNos = queryItems?.first(where: { $0.name == "pns" })?.value?.components(separatedBy: ",")
+      
+      if let id = id, let gn = gn, let fn = fn, let phoneNos = phoneNos {
+        return (id, gn, fn, phoneNos)
+      }
+      
+      return nil
+    }
 }
 
 // MARK: - 6) Navigation Host
 
 fileprivate struct NavigationHostView: View {
+  @Shared(.activeQrConfiguration)
+  var configuration
   @Observable
   final class AppState {
     // Controls if the navigation drawer is open or closed
@@ -81,7 +116,8 @@ fileprivate struct NavigationHostView: View {
     )
     .padding()
     .frame(width: 300)
-    .background(colorScheme == .light ? Color(white: 0.95) : Color(white: 0.08))
+    
+    .background(configuration.backgroundColor)
     .offset(x: appState.hasNavigationDrawerOpen ? 0 : -200)
     .animation(.easeInOut, value: appState.hasNavigationDrawerOpen)
     .transition(.move(edge: .leading))
