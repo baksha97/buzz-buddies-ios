@@ -1,8 +1,13 @@
+import CasePaths
 import Dependencies
 import SwiftUI
 
 struct ContactPickerView: View {
 
+  @CasePathable
+  enum Destination {
+    case addContact
+  }
   
   let selectedContact: Contact.ContactListIdentifier?
   let exclusions: [Contact.ContactListIdentifier]
@@ -17,6 +22,9 @@ struct ContactPickerView: View {
   @Dependency(\.contactsClient.fetchContacts)
   private var fetchContacts
   @State private var searchText = ""
+  
+  
+  @State private var sheet: Destination? = nil
   
   private var filteredContacts: [Contact] {
     let filtered = contacts.filter { contact in
@@ -34,6 +42,11 @@ struct ContactPickerView: View {
   var body: some View {
     NavigationView {
       List {
+        Section {
+          Button("Add new contact") {
+            sheet = .addContact
+          }
+        }
         Section {
           Button("None") {
             onSelect(nil)
@@ -66,16 +79,32 @@ struct ContactPickerView: View {
           }
         }
       }
+      .sheet(isPresented: Binding($sheet)) {
+        AddContactView {
+          refreshContactList()
+        }
+      }
       .searchable(text: $searchText, prompt: "Search contacts")
       .navigationTitle("Select Contact")
       .navigationBarItems(trailing: Button("Cancel") { dismiss() })
-      .task {
-        do {
-          contacts = try await fetchContacts()
-        } catch {
-          print(error)
-        }
+      .onAppear(perform: refreshContactList)
+    }
+  }
+  
+  func refreshContactList() {
+    Task {
+      do {
+        contacts = try await fetchContacts()
+        print(contacts)
+      } catch {
+        print(error)
       }
     }
+  }
+}
+
+#Preview {
+  ContactPickerView(selectedContact: "1", exclusions: []) {
+    print($0)
   }
 }

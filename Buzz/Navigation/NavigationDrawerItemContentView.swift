@@ -36,22 +36,15 @@ struct NavigationDrawerContentView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
       HeaderSection()
-//      Divider()
+      Divider()
       NavigationSection(
         title: nil,
         selectedItem: selectedItem,
         items: [.home],
         onItemTap: onItemTap
       )
-      Divider()
-      NavigationSection(
-        title: "In Development",
-        selectedItem: selectedItem,
-        items: [.qr],
-        onItemTap: onItemTap
-      )
-      Spacer()
       
+      Spacer()
       if !hasContactAccess {
         Divider()
         HStack {
@@ -71,6 +64,9 @@ struct NavigationDrawerContentView: View {
         items: [.settings, .help],
         onItemTap: onItemTap
       )
+      
+      Divider()
+      qrNavigationButton
     }
     .padding(12)
     .task {
@@ -80,6 +76,23 @@ struct NavigationDrawerContentView: View {
     .foregroundColor(configuration.foregroundColor)
     .background(configuration.backgroundColor)
     .cornerRadius(8)
+  }
+  
+  @ViewBuilder
+  var qrNavigationButton: some View {
+    Button(action: { onItemTap(.qr) }) {
+      VStack {
+        BuzzQRImage(configuration: configuration)
+        
+        HStack {
+          Text(configuration.text)
+            .bold()
+          Spacer()
+          Image(systemName: "slider.vertical.3")
+        }
+      }
+    }
+    .buttonStyle(ElevatedButtonStyle(fillColor: configuration.backgroundColor))
   }
 }
 
@@ -132,10 +145,6 @@ private struct HeaderSection: View {
   var body: some View {
     VStack(spacing: 8) {
       HStack {
-        Image(systemName: "app.fill")
-          .resizable()
-          .frame(width: 40, height: 40)
-        
         VStack(alignment: .leading) {
           Text("Buzz App").bold()
           Text("v1.0.0")
@@ -210,4 +219,23 @@ private struct DrawerItemView: View {
 
 #Preview("Navigation Resolver") {
   NavigationItemScreenResolver(item: .settings)
+}
+
+struct ElevatedButtonStyle: ButtonStyle {
+  let fillColor: Color
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .padding()
+      .background(
+        RoundedRectangle(cornerRadius: 8)
+          .fill(fillColor)
+          .shadow(
+            color: .black.opacity(configuration.isPressed ? 0.1 : 0.2),
+            radius: configuration.isPressed ? 2 : 4,
+            x: 0,
+            y: configuration.isPressed ? 1 : 2
+          )
+      )
+      .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+  }
 }

@@ -27,7 +27,12 @@ final class ContactReferralViewModel {
   }
   
   var viewState: ViewState = .loading
-  var destination: Destination?
+  var destination: Destination? {
+    didSet {
+      // whenever we dismiss a sheet, let's refresh our contacts
+      refreshContacts()
+    }
+  }
   var searchText = ""
   
   private(set) var contacts: [ContactReferralModel] = []
@@ -120,6 +125,21 @@ final class ContactReferralViewModel {
   }
   
   @MainActor
+  func refreshContacts() {
+    Task {
+      viewState = .loading
+      do {
+        // First fetch to get initial list of contacts
+        let initialContacts = try await client.fetchContacts()
+        contacts = initialContacts.sorted { $0.contact.fullName < $1.contact.fullName }
+      } catch {
+        viewState = .error("Failed to load contacts: \(error.localizedDescription)")
+      }
+      viewState = .loaded
+    }
+  }
+  
+  @MainActor
   private func startObserving(_ contactId: Contact.ContactListIdentifier) {
     // Cancel existing observer if any
     observers[contactId]?.cancel()
@@ -181,17 +201,12 @@ struct ContactListView: View {
       }
       .searchable(text: $viewModel.searchText, prompt: "Search contacts")
       .refreshable {
-        Task {
-          await viewModel.initialize()
-        }
+        viewModel.refreshContacts()
       }
       floatingActionButton
     }
     .sheet(isPresented: Binding($viewModel.destination.addContact)) {
-      AddContactView(
-        availableReferrers: viewModel.availableReferrers,
-        onSuccess: { /* No need for refresh */ }
-      )
+      AddContactView()
     }
     .sheet(item: $viewModel.destination.contactDetails) { contact in
       ContactDetailsView(contact: contact)

@@ -82,22 +82,13 @@ import Dependencies
 struct AddContactView: View {
   @State private var viewModel = AddContactViewModel()
   @Environment(\.dismiss) private var dismiss
-  let availableReferrers: [ContactReferralModel]
-  let onSuccess: () -> Void
   
-  init(
-    availableReferrers: [ContactReferralModel],
-    onSuccess: @escaping () -> Void
-  ) {
-    self.availableReferrers = availableReferrers
-    self.onSuccess = onSuccess
-  }
+  var onSuccess: (() -> Void)? = nil
   
   var body: some View {
     NavigationView {
       FormContent(
         viewModel: viewModel,
-        availableReferrers: availableReferrers,
         onSuccess: onSuccess,
         dismiss: dismiss
       )
@@ -112,8 +103,7 @@ struct AddContactView: View {
 // MARK: - Subviews
 private struct FormContent: View {
   @State var viewModel: AddContactViewModel
-  let availableReferrers: [ContactReferralModel]
-  let onSuccess: () -> Void
+  let onSuccess: (() -> Void)?
   let dismiss: DismissAction
   
   var body: some View {
@@ -129,8 +119,7 @@ private struct FormContent: View {
     }
     .contactPickerSheet(
       isPresented: $viewModel.showingContactPicker,
-      viewModel: viewModel,
-      availableReferrers: availableReferrers
+      viewModel: viewModel
     )
     .errorAlert(viewModel: viewModel)
     .disabled(viewModel.isLoading)
@@ -192,7 +181,7 @@ private struct ReferrerSection: View {
 
 private struct AddButtonSection: View {
   @State var viewModel: AddContactViewModel
-  let onSuccess: () -> Void
+  let onSuccess: (() -> Void)?
   let dismiss: DismissAction
   
   var body: some View {
@@ -200,7 +189,7 @@ private struct AddButtonSection: View {
       Button("Add Contact") {
         Task {
           try? await viewModel.addContact()
-          onSuccess()
+          onSuccess?()
           dismiss()
         }
       }
@@ -213,8 +202,7 @@ private struct AddButtonSection: View {
 private extension View {
   func contactPickerSheet(
     isPresented: Binding<Bool>,
-    viewModel: AddContactViewModel,
-    availableReferrers: [ContactReferralModel]
+    viewModel: AddContactViewModel
   ) -> some View {
     sheet(isPresented: isPresented) {
       ContactPickerView(

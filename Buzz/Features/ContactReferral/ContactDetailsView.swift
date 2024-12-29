@@ -32,7 +32,11 @@ final class ContactDetailsViewModel {
   var contact: ContactReferralModel
   var viewState: ViewState = .loading
   var formState: ContactDetailFormState = .init(referrals: [])
-  var contactPickerDestination: ContactPickerSheetDestination? = nil
+  var contactPickerDestination: ContactPickerSheetDestination? = nil {
+    didSet {
+      
+    }
+  }
   
   private var observationTask: Task<Void, Never>?
   
