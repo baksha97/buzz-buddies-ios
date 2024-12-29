@@ -1,9 +1,6 @@
 import SwiftUI
 import Dependencies
 
-import SwiftUI
-import Dependencies
-
 struct ContactSearchView: View {
   let searchRequest: ContactSearchRequest
   
