@@ -11,6 +11,7 @@ struct ContactListViewV2: View {
   var body: some View {
     ZStack {
       configuration.backgroundColor
+        .opacity(0.2)
         .edgesIgnoringSafeArea(.all)
       
       VStack(spacing: 0) {
@@ -45,7 +46,7 @@ struct ContactListViewV2: View {
   private var searchBar: some View {
     TextField("Search contacts", text: $viewModel.searchText)
       .padding(12)
-      .background(configuration.backgroundColor.opacity(0.9))
+      .background(configuration.backgroundColor.opacity(0.4))
       .cornerRadius(12)
       .shadow(radius: 2, y: 1)
       .padding([.horizontal, .top], 16)
@@ -116,7 +117,7 @@ struct ContactReferralRowV2: View {
       }
     }
     .padding(12)
-    .background(configuration.backgroundColor.opacity(0.8))
+    .background(configuration.backgroundColor)
     .cornerRadius(12)
     .shadow(radius: 2, y: 1)
     .onTapGesture(perform: onTap)
@@ -274,6 +275,7 @@ extension Contact {
 #Preview {
   NavigationView {
     ContactListViewV2()
+      .preferredColorScheme(.dark)
   }
 }
 #Preview("Contact Referral Scenarios") {

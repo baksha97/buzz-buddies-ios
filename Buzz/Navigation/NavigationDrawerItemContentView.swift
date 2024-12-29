@@ -76,7 +76,7 @@ struct NavigationDrawerContentView: View {
     }
     .padding([.leading, .trailing], 2)  // Padding first
     .foregroundColor(configuration.foregroundColor)
-    .background(configuration.backgroundColor)  // Background after padding
+    .background(configuration.backgroundColor.opacity(0.2))  // Background after padding
     .ignoresSafeArea(.all, edges: .vertical)  // Make background extend full height
   }
   
