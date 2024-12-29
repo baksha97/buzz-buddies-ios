@@ -217,13 +217,13 @@ private extension View {
     availableReferrers: [ContactReferralModel]
   ) -> some View {
     sheet(isPresented: isPresented) {
-      ContactPickerView(config: .init(
-        contacts: availableReferrers,
-        selectedContactId: viewModel.selectedReferrer?.id,
+      ContactPickerView(
+        selectedContact: viewModel.selectedReferrer?.id,
+        exclusions: [],
         onSelect: { selected in
           viewModel.selectedReferrer = selected
         }
-      ))
+      )
     }
   }
   

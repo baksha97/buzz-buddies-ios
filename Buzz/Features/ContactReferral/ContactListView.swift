@@ -106,7 +106,7 @@ final class ContactReferralViewModel {
     do {
       // First fetch to get initial list of contacts
       let initialContacts = try await client.fetchContacts()
-      contacts = initialContacts
+      contacts = initialContacts.sorted { $0.contact.fullName < $1.contact.fullName }
       
       // Start observing each contact
       for contact in initialContacts {
@@ -154,6 +154,7 @@ final class ContactReferralViewModel {
       contact.contact.fullName.localizedCaseInsensitiveContains(searchText) ||
       contact.contact.phoneNumbers.contains { $0.contains(searchText) }
     }
+    .sorted { $0.contact.fullName < $1.contact.fullName }
   }
   
   private func performAction(_ action: () async throws -> Void) async {
@@ -179,7 +180,11 @@ struct ContactListView: View {
         contactsSection
       }
       .searchable(text: $viewModel.searchText, prompt: "Search contacts")
-      
+      .refreshable {
+        Task {
+          await viewModel.initialize()
+        }
+      }
       floatingActionButton
     }
     .sheet(isPresented: Binding($viewModel.destination.addContact)) {

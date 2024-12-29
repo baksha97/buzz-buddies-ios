@@ -98,8 +98,8 @@ private extension ReferralRecordClient {
           if hasCircularReferralReference {
             throw ReferralRecordClient.Failure.invalidReferralRelationship
           }
-          
-          try referral.update(db)
+          // TODO: Make this update, not upsert --- or make a new function
+          try referral.upsert(db)
         }
       },
       fetchRecord: { contactUUID in
@@ -178,9 +178,9 @@ private extension ReferralRecordClient {
 extension ReferralRecordClient: DependencyKey {
   public static var liveValue: ReferralRecordClient {
     #if DEBUG
-    .makeClient(with: try! DatabaseQueue(path: dbPath))
-    #else
     .makeClient(with: try! DatabaseQueue())
+    #else
+    .makeClient(with: try! DatabaseQueue(path: dbPath))
     #endif
   }
 }

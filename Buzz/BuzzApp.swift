@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import Dependencies
 import Sharing
+import SwiftUINavigation
 
 @main
 struct BuzzApp: App {
@@ -13,17 +14,62 @@ struct BuzzApp: App {
     }
   }
 }
+
 struct RootView: View {
   
   @Dependency(\.contactReferralClient.requestContactsAuthorization)
   private var requestAuthorization
   
+  @CasePathable
+  enum Destination {
+    case scannedQr(request: ContactSearchRequest)
+  }
+  
+  @State
+  var destination: Destination? = nil
+  
   var body: some View {
     NavigationHostView()
       .task {
-        let hasAuthorizationForContacts = await requestAuthorization()
+        _ =  await requestAuthorization()
+      }
+      .onOpenURL { url in
+        guard url.scheme == "buzzapp" else { return }
+        guard let parsed = parse(url: url) else {
+          print("failed to parse link \(url)")
+          return
+        }
+        destination = .scannedQr(
+          request: .init(
+            id: parsed.id,
+            givenName: parsed.gn,
+            familyName: parsed.fn,
+            phoneNumber: parsed.phoneNumbers.first ?? ""
+          )
+        )
+      }
+      .sheet(item: $destination.scannedQr) { request in
+        ContactSearchView(searchRequest: request)
       }
   }
+  
+  func parse(url: URL) -> (id: String, gn: String, fn: String, phoneNumbers: [String])? {
+      guard url.scheme == "buzzapp", url.host == "referral" else {
+        return nil
+      }
+      
+      let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
+      let id = queryItems?.first(where: { $0.name == "id" })?.value
+      let gn = queryItems?.first(where: { $0.name == "gn" })?.value
+      let fn = queryItems?.first(where: { $0.name == "fn" })?.value
+      let phoneNos = queryItems?.first(where: { $0.name == "pns" })?.value?.components(separatedBy: ",")
+      
+      if let id = id, let gn = gn, let fn = fn, let phoneNos = phoneNos {
+        return (id, gn, fn, phoneNos)
+      }
+      
+      return nil
+    }
 }
 
 // MARK: - 6) Navigation Host
@@ -37,7 +83,7 @@ fileprivate struct NavigationHostView: View {
     var hasNavigationDrawerOpen: Bool = false
     
     // Stores which drawer item (screen) was last selected
-    var lastDrawerItem: NavigationDrawerItem = .qr
+    var lastDrawerItem: NavigationDrawerItem = .home
   }
   
   @State var appState: AppState = AppState()

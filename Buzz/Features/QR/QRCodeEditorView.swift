@@ -8,7 +8,7 @@ import Sharing
 class QRMenuModel {
   @ObservationIgnored
   @Shared(.activeQrConfiguration)
-  var configuration = BuzzQRImageConfiguration()
+  var configuration
   var picker: PickerSheet? = nil
   @CasePathable
   enum PickerSheet {
@@ -153,9 +153,6 @@ struct QRCodeEditorView: View {
             .frame(height: 48)
         }
         .padding()
-        
-        
-        
       }
     }
     .ignoresSafeArea(edges: .bottom)

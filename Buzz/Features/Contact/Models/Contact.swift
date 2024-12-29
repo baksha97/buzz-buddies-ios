@@ -4,7 +4,7 @@ import DependenciesMacros
 import Foundation
 
 /// A simple domain contact model of our own, separate from `CNContact`.
-public struct Contact: Equatable, Identifiable, Hashable, Sendable {
+public struct Contact: Equatable, Identifiable, Hashable, Sendable, Codable {
   public typealias ContactListIdentifier = String
   public let id: ContactListIdentifier
   public var givenName: String

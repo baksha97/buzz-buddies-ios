@@ -27,8 +27,8 @@ struct NavigationDrawerContentView: View {
   let selectedItem: NavigationDrawerItem
   let onItemTap: OnDrawerItemTap
   
-  @Dependency(\.contactReferralClient.requestContactsAuthorization)
-  private var requestAuthorization
+  @Dependency(\.contactReferralClient.checkAuthorization)
+  private var checkAuthorization
   
   @State
   var hasContactAccess = true
@@ -74,7 +74,7 @@ struct NavigationDrawerContentView: View {
     }
     .padding(12)
     .task {
-      hasContactAccess = await requestAuthorization()
+      hasContactAccess = await checkAuthorization()
     }
     
     .foregroundColor(configuration.foregroundColor)

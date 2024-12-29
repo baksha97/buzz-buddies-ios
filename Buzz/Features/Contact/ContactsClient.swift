@@ -3,33 +3,18 @@ import Dependencies
 import DependenciesMacros
 import Foundation
 
-public struct ContactClientCreateRequest: Equatable, Hashable, Sendable {
-  public var givenName: String
-  public var familyName: String
-  public var phoneNumbers: [String]
-  public var avatarData: Data?
 
-  public init(
-    givenName: String,
-    familyName: String,
-    phoneNumbers: [String] = [],
-    avatarData: Data? = nil
-  ) {
-    self.givenName = givenName
-    self.familyName = familyName
-    self.phoneNumbers = phoneNumbers
-    self.avatarData = avatarData
-  }
-}
 
 /// Our ContactsClient dependency. It hides all usage of `CNContact`.
 @DependencyClient
 public struct ContactsClient: Sendable {
   public var requestAuthorization: @Sendable () async -> Bool = { true }
+  public var checkAuthorization: @Sendable () async -> Bool = { true }
   public var fetchContacts: @Sendable () async throws -> [Contact]
   public var fetchContactById: @Sendable (_ id: Contact.ContactListIdentifier) async throws -> Contact
   public var fetchContactsByIds: @Sendable (_ ids: [Contact.ContactListIdentifier]) async throws -> [Contact]
-  public var addContact: @Sendable (_ contact: ContactClientCreateRequest) async throws -> Contact
+  public var addContact: @Sendable (_ contact: ContactCreateRequest) async throws -> Contact
+  public var search: @Sendable (_ request: ContactSearchRequest) async throws -> [Contact]
   
   public enum Failure: Error, Equatable {
     case unauthorized
@@ -40,6 +25,7 @@ public struct ContactsClient: Sendable {
 }
 
 // MARK: - Live Implementation
+
 
 private actor ContactsActor {
   let store = CNContactStore()
@@ -57,8 +43,13 @@ private actor ContactsActor {
     }
   }
   
+  func checkAuthorization() -> Bool {
+    CNContactStore.isAuthorized
+  }
+  
   func fetchContacts() async throws -> [Contact] {
-    guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
+    guard CNContactStore.isAuthorized else {
+      print("failed to fetch contacts because app isn't authorized")
       throw ContactsClient.Failure.unauthorized
     }
     
@@ -87,7 +78,7 @@ private actor ContactsActor {
   }
   
   func fetchContactById(id: Contact.ContactListIdentifier) async throws -> Contact {
-    guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
+    guard CNContactStore.isAuthorized else {
       throw ContactsClient.Failure.unauthorized
     }
     
@@ -99,6 +90,7 @@ private actor ContactsActor {
     ]
     
     do {
+      // TODO: This should likely return an optional instead of throw, would require error mapping
       let contact = try store.unifiedContact(withIdentifier: id, keysToFetch: keys)
       return domainContact(from: contact)
     } catch {
@@ -107,7 +99,7 @@ private actor ContactsActor {
   }
   
   func fetchContactsByIds(ids: [Contact.ContactListIdentifier]) async throws -> [Contact] {
-    guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
+    guard CNContactStore.isAuthorized else {
       throw ContactsClient.Failure.unauthorized
     }
     
@@ -129,8 +121,40 @@ private actor ContactsActor {
     }
   }
   
-  func addContact(_ contactCreateRequest: ContactClientCreateRequest) async throws -> Contact {
-    guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
+  func search(
+    id: Contact.ContactListIdentifier,
+    givenName: String,
+    familyName: String,
+    phoneNumber: String
+  ) async throws -> [Contact] {
+    if let foundContact = try? await fetchContactById(id: id) {
+      return [foundContact]
+    }
+    return try search(givenName: givenName, familyName: familyName, phoneNumbers: [phoneNumber])
+  }
+  
+  private func search(
+    givenName: String,
+    familyName: String,
+    phoneNumbers: [String]
+  )  throws -> [Contact] {
+    let namePredicate = CNContact.predicateForContacts(matchingName: "\(givenName) \(familyName)")
+    let phoneNumberPredicate = CNContact.predicateForContacts(matching: CNPhoneNumber(stringValue: phoneNumbers[0]))
+    let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [namePredicate, phoneNumberPredicate])
+    
+    let keys: [CNKeyDescriptor] = [
+      CNContactGivenNameKey as CNKeyDescriptor,
+      CNContactFamilyNameKey as CNKeyDescriptor,
+      CNContactPhoneNumbersKey as CNKeyDescriptor,
+      CNContactThumbnailImageDataKey as CNKeyDescriptor
+    ]
+    let contacts = try store.unifiedContacts(matching: compoundPredicate, keysToFetch: keys as [CNKeyDescriptor])
+    
+    return contacts.map(domainContact)
+  }
+  
+  func addContact(_ contactCreateRequest: ContactCreateRequest) async throws -> Contact {
+    guard CNContactStore.isAuthorized else {
       throw ContactsClient.Failure.unauthorized
     }
     
@@ -145,25 +169,15 @@ private actor ContactsActor {
     saveRequest.add(mutable, toContainerWithIdentifier: nil)
     do {
       try store.execute(saveRequest)
-      
-      // Create compound predicate matching both name and first phone number
-      let namePredicate = CNContact.predicateForContacts(matchingName: "\(contactCreateRequest.givenName) \(contactCreateRequest.familyName)")
-      let phoneNumberPredicate = CNContact.predicateForContacts(matching: CNPhoneNumber(stringValue: contactCreateRequest.phoneNumbers[0]))
-      let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [namePredicate, phoneNumberPredicate])
-      
-      let keys: [CNKeyDescriptor] = [
-        CNContactGivenNameKey as CNKeyDescriptor,
-        CNContactFamilyNameKey as CNKeyDescriptor,
-        CNContactPhoneNumbersKey as CNKeyDescriptor,
-        CNContactThumbnailImageDataKey as CNKeyDescriptor
-      ]
-      let contacts = try store.unifiedContacts(matching: compoundPredicate, keysToFetch: keys as [CNKeyDescriptor])
-      
+      let contacts = try search(
+        givenName: contactCreateRequest.givenName,
+        familyName: contactCreateRequest.familyName,
+        phoneNumbers: contactCreateRequest.phoneNumbers
+      )
       guard let savedContact = contacts.last else {
         throw ContactsClient.Failure.saveFailed
       }
-      
-      return domainContact(from: savedContact)
+      return savedContact
     } catch {
       throw ContactsClient.Failure.saveFailed
     }
@@ -192,6 +206,9 @@ extension ContactsClient: DependencyKey {
       requestAuthorization: {
         await actor.requestAuthorization()
       },
+      checkAuthorization: {
+        await actor.checkAuthorization()
+      },
       fetchContacts: {
         try await actor.fetchContacts()
       },
@@ -203,6 +220,9 @@ extension ContactsClient: DependencyKey {
       },
       addContact: { contact in
         try await actor.addContact(contact)
+      },
+      search: { request in
+        try await actor.search(id: request.id, givenName: request.givenName, familyName: request.familyName, phoneNumber: request.phoneNumber)
       }
     )
   }
@@ -214,6 +234,7 @@ extension ContactsClient {
     let contacts = LockIsolated([Contact].mock)
     return ContactsClient(
       requestAuthorization: { true },
+      checkAuthorization: { true },
       fetchContacts: { contacts.value },
       fetchContactById: { id in
         guard let contact = (contacts.value.first { $0.id == id }) else {
@@ -230,8 +251,28 @@ extension ContactsClient {
           contacts.append(createdContact)
         }
         return createdContact
+      },
+      search: { request in
+        // TODO: make search actually search mocks
+        return contacts.value.filter { $0.id == request.id }
       }
     )
+  }
+}
+
+
+fileprivate extension CNContactStore {
+  static var isAuthorized: Bool {
+    if #available(iOS 18.0, *) {
+      guard CNContactStore.authorizationStatus(for: .contacts) == .authorized ||  CNContactStore.authorizationStatus(for: .contacts) == .limited else {
+        return false
+      }
+    } else {
+      guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
+        return false
+      }
+    }
+    return true
   }
 }
 // MARK: - DependencyValues Extension

@@ -26,12 +26,11 @@ public struct ContactReferralClientCreateRequest: Equatable, Hashable, Sendable 
 }
 
 fileprivate extension ContactReferralClientCreateRequest {
-  func toContactsClientCreateRequest() -> ContactClientCreateRequest {
+  func toContactsClientCreateRequest() -> ContactCreateRequest {
     .init(
       givenName: givenName,
       familyName: familyName,
-      phoneNumbers: phoneNumbers,
-      avatarData: avatarData
+      phoneNumbers: phoneNumbers
     )
   }
 }
@@ -61,12 +60,14 @@ public struct ContactReferralModel: Sendable, Equatable, Identifiable, Hashable 
 public struct ContactReferralClient: Sendable {
   // MARK: Contact Interface
   public var requestContactsAuthorization: @Sendable () async -> Bool = { true }
+  public var checkAuthorization: @Sendable () async -> Bool = { true }
   public var fetchContacts: @Sendable () async throws -> [ContactReferralModel]
   public var fetchContactById: @Sendable (_ id: Contact.ContactListIdentifier) async throws -> ContactReferralModel
   public var fetchContactsByIds: @Sendable (_ ids: [Contact.ContactListIdentifier]) async throws -> [ContactReferralModel]
   
   public var addContact: @Sendable (_ contact: ContactReferralClientCreateRequest) async throws -> Void
-  
+  public var search: @Sendable (_ request: ContactSearchRequest) async throws -> [ContactReferralModel]
+
   // MARK: Referral Operations
   public var createReferral: @Sendable (_ contact: Contact.ContactListIdentifier, _ referredBy: Contact.ContactListIdentifier?) async throws -> Void
   public var updateReferral: @Sendable (_ contact: Contact.ContactListIdentifier, _ referredBy: Contact.ContactListIdentifier?) async throws -> Void
@@ -124,6 +125,7 @@ extension ContactReferralClient {
     
     return ContactReferralClient(
       requestContactsAuthorization: contactsClient.requestAuthorization,
+      checkAuthorization: contactsClient.checkAuthorization,
       fetchContacts: {
         try await contactsClient
           .fetchContacts()
@@ -145,6 +147,10 @@ extension ContactReferralClient {
             )
           )
         }
+      },
+      search: { request in
+        try await contactsClient.search(request: request)
+          .asyncThrowingTaskGroupMap(mapToModel)
       },
       createReferral: { contactId, referredById in
         try await referralRecordClient.createRecord(
