@@ -95,7 +95,7 @@ struct ContactPickerView: View {
     Task {
       do {
         contacts = try await fetchContacts()
-        print(contacts)
+//        print(contacts)
       } catch {
         print(error)
       }

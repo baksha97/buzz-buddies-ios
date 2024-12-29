@@ -116,7 +116,7 @@ struct NavigationItemScreenResolver: View {
   @ViewBuilder
   private var screen: some View {
     switch item {
-    case .home:             ContactListView()
+    case .home:             ContactListViewV2()
     case .qr:               QRCodeEditorView()
     case .settings:         SettingsScreen()
     case .help:             HelpScreen()
