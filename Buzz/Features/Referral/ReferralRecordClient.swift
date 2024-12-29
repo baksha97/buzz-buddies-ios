@@ -13,6 +13,7 @@ public struct ReferralRecordClient: Sendable {
   public var fetchAllRecords: @Sendable () async throws -> [ReferralRecord]
   public var fetchReferrer: @Sendable (_ contactUUID: Contact.ContactListIdentifier) async throws -> ReferralRecord?
   public var fetchReferredContacts: @Sendable (_ contactUUID: Contact.ContactListIdentifier) async throws -> [ReferralRecord]
+  public var deleteRecord: @Sendable (_ referral: ReferralRecord) async throws-> Bool
   public var deleteDatabase: @Sendable () async throws -> Void
   public var observeRecordWithReferred: @Sendable (_ contactUUID: Contact.ContactListIdentifier) -> AsyncThrowingStream<(ReferralRecord?, [ReferralRecord]), Error> = { _ in .finished() }
   
@@ -135,6 +136,11 @@ private extension ReferralRecordClient {
             .filter(ReferralRecord.Columns.referredByUUID == contactUUID)
             .filter(ReferralRecord.Columns.contactUUID != contactUUID)
             .fetchAll(db)
+        }
+      },
+      deleteRecord: { record in
+        try await dbQueue.write { db in
+          try record.delete(db)
         }
       },
       deleteDatabase: {

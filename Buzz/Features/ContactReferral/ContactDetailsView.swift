@@ -93,6 +93,15 @@ final class ContactDetailsViewModel {
     }
   }
   
+  // remove a contact from a user's referred list
+  func removeReferral(for contactId: String) {
+    Task {
+      await performAction {
+        _ = try await client.removeReferral(contactId, contact.contact.id)
+      }
+    }
+  }
+  
   private func performAction(_ action: () async throws -> Void) async {
     viewState = .loading
     do {
@@ -157,106 +166,112 @@ struct ContactDetailsView: View {
           }
         }
       }
-        .alert("Error", isPresented: .init(
-          get: { viewModel.errorMessage != nil },
-          set: { if !$0 { viewModel.viewState = .loaded } }
-        )) {
-          Button("OK") { viewModel.viewState = .loaded }
-        } message: {
-          if let errorMessage = viewModel.errorMessage {
-            Text(errorMessage)
-          }
-        }
-        .task {
-          await viewModel.initialize()
+      .alert("Error", isPresented: .init(
+        get: { viewModel.errorMessage != nil },
+        set: { if !$0 { viewModel.viewState = .loaded } }
+      )) {
+        Button("OK") { viewModel.viewState = .loaded }
+      } message: {
+        if let errorMessage = viewModel.errorMessage {
+          Text(errorMessage)
         }
       }
-    }
-    
-    @ViewBuilder
-    private var mainContent: some View {
-      VStack {
-        Form {
-          contactDetailsSection
-          referrerSection
-          referContactsSection
-        }
-        ContactReferralQRView(contact: viewModel.contact.contact)
+      .task {
+        await viewModel.initialize()
       }
     }
-    
-    @ViewBuilder
-    private var contactDetailsSection: some View {
-      Section("Contact Details") {
-        Text("Name: \(viewModel.contact.contact.fullName)")
-        
-        if !viewModel.contact.contact.phoneNumbers.isEmpty {
-          ForEach(viewModel.contact.contact.phoneNumbers, id: \.self) { number in
-            Text("Phone: \(number)")
-          }
-        }
+  }
+  
+  @ViewBuilder
+  private var mainContent: some View {
+    VStack {
+      Form {
+        contactDetailsSection
+        referrerSection
+        referContactsSection
       }
+      ContactReferralQRView(contact: viewModel.contact.contact)
     }
-    
-    @ViewBuilder
-    private var referrerSection: some View {
-      Section("Referrer") {
-        referrerButton
-        if viewModel.canUpdateReferrer {
-          updateReferrerButton
-        }
-      }
-    }
-    
-    @ViewBuilder
-    private var updateReferrerButton: some View {
-      Button(viewModel.referrerActionTitle) {
-        viewModel.updateReferral()
-        dismiss()
-      }
-      .foregroundColor(.accentColor)
-      .disabled(viewModel.isLoading)
-    }
-    
-    
-    @ViewBuilder
-    private var referrerButton: some View {
-      Button {
-        viewModel.contactPickerDestination = .referrer
-      } label: {
-        HStack {
-          Text("Referred By")
-          Spacer()
-          Text(viewModel.formState.referredBy?.fullName ??
-               viewModel.contact.referredBy?.fullName ?? "None")
-          .foregroundColor(.secondary)
-        }
-      }
-    }
-    
-    @ViewBuilder
-    private var referContactsSection: some View {
-      Section("Refer Contacts") {
-        Button("Add Referral") {
-          viewModel.contactPickerDestination = .refer
-        }
-        if !viewModel.formState.referrals.isEmpty {
-          ForEach(viewModel.formState.referrals, id: \.id) { referredContact in
-            HStack {
-              Text(referredContact.fullName)
-              Spacer()
-              Text("Referred")
-                .foregroundColor(.secondary)
-            }
-          }
-        } else {
-          Text("No referrals made yet")
-            .foregroundColor(.secondary)
+  }
+  
+  @ViewBuilder
+  private var contactDetailsSection: some View {
+    Section("Contact Details") {
+      Text("Name: \(viewModel.contact.contact.fullName)")
+      
+      if !viewModel.contact.contact.phoneNumbers.isEmpty {
+        ForEach(viewModel.contact.contact.phoneNumbers, id: \.self) { number in
+          Text("Phone: \(number)")
         }
       }
     }
   }
   
-  #Preview {
-    ContactDetailsView(contact: .mock)
+  @ViewBuilder
+  private var referrerSection: some View {
+    Section("Referrer") {
+      referrerButton
+      if viewModel.canUpdateReferrer {
+        updateReferrerButton
+      }
+    }
   }
+  
+  @ViewBuilder
+  private var updateReferrerButton: some View {
+    Button(viewModel.referrerActionTitle) {
+      viewModel.updateReferral()
+      dismiss()
+    }
+    .foregroundColor(.accentColor)
+    .disabled(viewModel.isLoading)
+  }
+  
+  
+  @ViewBuilder
+  private var referrerButton: some View {
+    Button {
+      viewModel.contactPickerDestination = .referrer
+    } label: {
+      HStack {
+        Text("Referred By")
+        Spacer()
+        Text(viewModel.formState.referredBy?.fullName ??
+             viewModel.contact.referredBy?.fullName ?? "None")
+        .foregroundColor(.secondary)
+      }
+    }
+  }
+  
+  @ViewBuilder
+  private var referContactsSection: some View {
+    Section("Refer Contacts") {
+      Button("Add Referral") {
+        viewModel.contactPickerDestination = .refer
+      }
+      if !viewModel.formState.referrals.isEmpty {
+        ForEach(viewModel.formState.referrals, id: \.id) { referredContact in
+          HStack {
+            Text(referredContact.fullName)
+            Spacer()
+            Text("Referred")
+              .foregroundColor(.secondary)
+            Button(action: {  viewModel.removeReferral(for: referredContact.id) }) {
+              Image(systemName: "xmark")
+                .font(.system(size: 12))
+                .background(Color.red.opacity(0.1))
+                .foregroundColor(.red)
+            }
+          }
+        }
+      } else {
+        Text("No referrals made yet")
+          .foregroundColor(.secondary)
+      }
+    }
+  }
+}
+
+#Preview {
+  ContactDetailsView(contact: .mock)
+}

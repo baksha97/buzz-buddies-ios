@@ -71,6 +71,7 @@ public struct ContactReferralClient: Sendable {
   // MARK: Referral Operations
   public var createReferral: @Sendable (_ contact: Contact.ContactListIdentifier, _ referredBy: Contact.ContactListIdentifier?) async throws -> Void
   public var updateReferral: @Sendable (_ contact: Contact.ContactListIdentifier, _ referredBy: Contact.ContactListIdentifier?) async throws -> Void
+  public var removeReferral: @Sendable (_ contact: Contact.ContactListIdentifier, _ referredBy: Contact.ContactListIdentifier?) async throws -> Bool
   public var fetchUnreferredContacts: @Sendable () async throws -> [ContactReferralModel]
   public var observe: @Sendable (_ id: Contact.ContactListIdentifier) -> AsyncThrowingStream<ContactReferralModel, Error> = { _ in .finished() }
 }
@@ -162,6 +163,14 @@ extension ContactReferralClient {
       },
       updateReferral: { contactId, referredById in
         try await referralRecordClient.updateRecord(
+          ReferralRecord(
+            contactUUID: contactId,
+            referredByUUID: referredById
+          )
+        )
+      },
+      removeReferral: { contactId, referredById in
+        try await referralRecordClient.deleteRecord(
           ReferralRecord(
             contactUUID: contactId,
             referredByUUID: referredById

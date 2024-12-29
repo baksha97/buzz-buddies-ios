@@ -21,7 +21,7 @@ struct ContactSearchView: View {
       } else if let errorMessage = errorMessage {
         ErrorView(message: errorMessage)
       } else if let contact = foundContact {
-        ContactActionView(model: contact)
+        ContactDetailsView(contact: contact)
       }
     }
     .task {
