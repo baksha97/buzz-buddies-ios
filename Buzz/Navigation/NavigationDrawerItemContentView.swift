@@ -84,7 +84,7 @@ struct NavigationDrawerContentView: View {
   var qrNavigationButton: some View {
     Button(action: { onItemTap(.qr) }) {
       VStack {
-        BuzzQRImage(configuration: configuration)
+        BuzzQRImage(shareLocation: .none, configuration: configuration)
         HStack {
           if !configuration.text.trimmingCharacters(in: .whitespaces).isEmpty {
             Image(systemName: "link.circle.fill")

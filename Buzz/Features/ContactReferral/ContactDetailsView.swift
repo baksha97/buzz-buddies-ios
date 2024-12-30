@@ -293,7 +293,7 @@ struct ContactDetailsView: View {
                           viewModel.requestRemoveReferral(for: referredContact)
                         } label: {
                           Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.red)
+                            .foregroundColor(configuration.foregroundColor)
                         }
                       }
                       .padding(.vertical, 8)
@@ -327,7 +327,7 @@ struct ContactDetailsView: View {
             
             // MARK: - QR Code
             // Center the QR code on screen
-            ContactReferralQRView(contact: contact.contact)
+            ContactQRView(contact: contact.contact)
               .frame(maxWidth: .infinity, alignment: .center)
               .padding(.top, 8)
             

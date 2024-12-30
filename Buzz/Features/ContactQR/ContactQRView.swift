@@ -1,7 +1,7 @@
 import SwiftUI
 import Sharing
 
-struct ContactReferralQRView: View {
+struct ContactQRView: View {
   let contact: Contact
   
   @Shared(.activeQrConfiguration)
@@ -39,5 +39,7 @@ struct ContactReferralQRView: View {
 }
 
 #Preview {
-  ContactReferralQRView(contact: .mock)
+  VStack {
+    ContactQRView(contact: .mock)
+  }
 }
