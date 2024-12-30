@@ -17,14 +17,36 @@ public struct ReferralRecordClient: Sendable {
   public var deleteDatabase: @Sendable () async throws -> Void
   public var observeRecordWithReferred: @Sendable (_ contactUUID: Contact.ContactListIdentifier) -> AsyncThrowingStream<(ReferralRecord?, [ReferralRecord]), Error> = { _ in .finished() }
   
-  public enum Failure: Error {
+  public enum Failure: LocalizedError {
     case saveFailed
     case fetchFailed
     case notFound
     case deleteFailed
     case hasExistingRecordForContact
     case hasMissingRecordForContact
+    case hasReferralAlready
     case invalidReferralRelationship
+    
+    public var errorDescription: String? {
+      switch self {
+      case .saveFailed:
+        "Buzz couldn't save this referral"
+      case .fetchFailed:
+        "Buzz couldn't fetch this referral"
+      case .notFound:
+        "Buzz couldn't find this referral"
+      case .deleteFailed:
+        "Buzz couldn't delete this referral"
+      case .hasExistingRecordForContact:
+        "Buzz couldn't create this contact because contact already has a referral record"
+      case .hasMissingRecordForContact:
+        "Buzz couldn't update this referral since we can't find it"
+      case .hasReferralAlready:
+        "Buzz didn't want to overwrite this contact's existing referer"
+      case .invalidReferralRelationship:
+        "Buzz doesn't let you refer someone who referred you"
+      }
+    }
   }
 }
 
@@ -52,29 +74,28 @@ private extension ReferralRecordClient {
     return ReferralRecordClient(
       createRecord: { referral in
         try await dbQueue.write { db in
-          // Check if there's an existing record for this contact
-          let hasExistingRecordForContact = try ReferralRecord
-            .filter(ReferralRecord.Columns.contactUUID == referral.contactId)
-            .fetchOne(db) != nil
+          let existingReferral = try ReferralRecord.fetchOne(db, id: referral.contactId)
           
-          if hasExistingRecordForContact {
-            throw ReferralRecordClient.Failure.hasExistingRecordForContact
+          let isOverlappingReferral = if let existingReferral  { existingReferral.referredById != nil } else { false }
+          
+          if isOverlappingReferral {
+            throw ReferralRecordClient.Failure.hasReferralAlready
           }
           
           // You can't refer someone who referred you
-          let hasCircularReferralReference = if let referredByUUID = referral.referredById,
-                                                try ReferralRecord
+          let isReferringReferredBy = if let referredByUUID = referral.referredById,
+                                         try ReferralRecord
             .filter(ReferralRecord.Columns.contactUUID == referredByUUID)
             .filter(ReferralRecord.Columns.referredByUUID == referral.contactId)
             .fetchOne(db) != nil { true }
           else { false }
           
           // If there's a referrer, check for circular referral
-          if hasCircularReferralReference {
+          if isReferringReferredBy {
             throw ReferralRecordClient.Failure.invalidReferralRelationship
           }
           
-          try referral.insert(db)
+          try referral.upsert(db)
         }
       },
       updateRecord: { referral in
@@ -88,19 +109,18 @@ private extension ReferralRecordClient {
             throw ReferralRecordClient.Failure.hasMissingRecordForContact
           }
           // You can't refer someone who referred you
-          let hasCircularReferralReference = if let referredByUUID = referral.referredById,
+          let isReferringReferredBy = if let referredByUUID = referral.referredById,
                                                 try ReferralRecord
-            .filter(ReferralRecord.Columns.referredByUUID == referral.contactId)
             .filter(ReferralRecord.Columns.contactUUID == referredByUUID)
+            .filter(ReferralRecord.Columns.referredByUUID == referral.contactId)
             .fetchOne(db) != nil { true }
           else { false }
           
           // If there's a referrer, check for circular referral
-          if hasCircularReferralReference {
+          if isReferringReferredBy {
             throw ReferralRecordClient.Failure.invalidReferralRelationship
           }
-          // TODO: Make this update, not upsert --- or make a new function
-          try referral.upsert(db)
+          try referral.update(db)
         }
       },
       fetchRecord: { contactUUID in
@@ -184,7 +204,8 @@ private extension ReferralRecordClient {
 extension ReferralRecordClient: DependencyKey {
   public static var liveValue: ReferralRecordClient {
     #if DEBUG
-    .makeClient(with: try! DatabaseQueue())
+    .makeClient(with: try! DatabaseQueue(path: dbPath))
+//    .makeClient(with: try! DatabaseQueue())
     #else
     .makeClient(with: try! DatabaseQueue(path: dbPath))
     #endif

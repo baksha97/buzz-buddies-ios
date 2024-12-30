@@ -36,6 +36,7 @@ struct NavigationDrawerContentView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
       HeaderSection()
+        .padding([.leading, .trailing], 12)  // Padding first
       Divider()
       NavigationSection(
         title: nil,
@@ -43,7 +44,8 @@ struct NavigationDrawerContentView: View {
         items: [.home],
         onItemTap: onItemTap
       )
-      
+      .padding([.leading, .trailing], 12)  // Padding first
+
       Spacer()
       if !hasContactAccess {
         Divider()
@@ -54,6 +56,7 @@ struct NavigationDrawerContentView: View {
             .bold()
         }
         .foregroundColor(.red)
+        .padding([.leading, .trailing], 12)  // Padding first
       }
       
       Divider()
@@ -66,29 +69,34 @@ struct NavigationDrawerContentView: View {
         items: [.settings, .help],
         onItemTap: onItemTap
       )
-      
+      .padding([.leading, .trailing], 12)  // Padding first
     }
-    .padding(12)
     .task {
       hasContactAccess = await checkAuthorization()
     }
-    
+    .padding([.leading, .trailing], 2)  // Padding first
     .foregroundColor(configuration.foregroundColor)
-    .background(configuration.backgroundColor)
-    .cornerRadius(8)
+    .background(configuration.backgroundColor.opacity(0.2))  // Background after padding
+    .ignoresSafeArea(.all, edges: .vertical)  // Make background extend full height
   }
   
   @ViewBuilder
   var qrNavigationButton: some View {
     Button(action: { onItemTap(.qr) }) {
       VStack {
-        BuzzQRImage(configuration: configuration)
-        
+        BuzzQRImage(shareLocation: .none, configuration: configuration)
         HStack {
-          Text(configuration.text)
-            .bold()
-          Spacer()
-          Image(systemName: "slider.vertical.3")
+          if !configuration.text.trimmingCharacters(in: .whitespaces).isEmpty {
+            Image(systemName: "link.circle.fill")
+            Text(configuration.text)
+              .bold()
+          }
+          else {
+            Image(systemName: "pencil.and.scribble")
+              .italic()
+            Text("Customize URL")
+              .italic()
+          }
         }
       }
     }
@@ -108,7 +116,7 @@ struct NavigationItemScreenResolver: View {
   @ViewBuilder
   private var screen: some View {
     switch item {
-    case .home:             ContactListView()
+    case .home:             ContactListViewV2()
     case .qr:               QRCodeEditorView()
     case .settings:         SettingsScreen()
     case .help:             HelpScreen()

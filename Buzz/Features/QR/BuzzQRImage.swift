@@ -4,27 +4,65 @@ import QRCode
 import CasePaths
 
 struct BuzzQRImage: View {
+  
+  enum ShareButtonLocation {
+    case none
+    case bottom
+    case right
+  }
+  
+  var shareLocation: ShareButtonLocation = .bottom
   let configuration: BuzzQRImageConfiguration
   
-  @State
-  private var error: Error?
+  @State private var result: Result<UIImage, Error>? = nil
+  @State private var isSharing: Bool = false
   
   var body: some View {
     Group {
       switch build(with: configuration) {
       case .success(let image):
-        Image(uiImage: image)
-          .resizable()
-          .interpolation(.none)
-          .scaledToFit()
-          .frame(width: 250, height: 250)
+        VStack {
+          HStack {
+            Image(uiImage: image)
+              .resizable()
+              .interpolation(.none)
+              .scaledToFit()
+              .frame(width: 250, height: 250)
+            if shareLocation == .right {
+              shareButton(for: image)
+            }
+          }
+          if shareLocation == .bottom {
+            shareButton(for: image)
+          }
+        }
       case .failure(let error):
         ErrorMessageView(error: error)
       }
     }
   }
   
-  func build(with configuration: BuzzQRImageConfiguration) -> Result<UIImage, Error> {
+  func shareButton(for image: UIImage) -> some View {
+    Button { isSharing = true } label: {
+      Image(systemName: "square.and.arrow.up")
+          .resizable()
+          .aspectRatio(contentMode: .fit)
+          .frame(width: 24, height: 24) // Ensure consistent size
+          .foregroundColor(configuration.foregroundColor)
+          .padding(8)
+          .background(configuration.backgroundColor)
+          .cornerRadius(8) // Optional for rounded corners
+    }
+    .sheet(isPresented: $isSharing) {
+      ShareSheet(activityItems: [image])
+    }
+  }
+  
+  private func loadImage() {
+    result = build(with: configuration)
+  }
+  
+  private func build(with configuration: BuzzQRImageConfiguration) -> Result<UIImage, Error> {
     Result {
       let data = try QRCode.build
         .text(configuration.text)
@@ -37,6 +75,7 @@ struct BuzzQRImage: View {
         .background.cornerRadius(configuration.cornerRadius.rawValue)
         .generate
         .image(dimension: configuration.dimension, representation: .png())
+      
       guard let image = UIImage(data: data) else {
         throw Failure.unableToConvertImage
       }

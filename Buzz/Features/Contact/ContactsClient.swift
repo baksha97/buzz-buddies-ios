@@ -16,11 +16,24 @@ public struct ContactsClient: Sendable {
   public var addContact: @Sendable (_ contact: ContactCreateRequest) async throws -> Contact
   public var search: @Sendable (_ request: ContactSearchRequest) async throws -> [Contact]
   
-  public enum Failure: Error, Equatable {
+  public enum Failure: LocalizedError, Equatable {
     case unauthorized
     case fetchFailed
     case contactNotFound
     case saveFailed
+    
+    public var errorDescription: String? {
+      switch self {
+      case .unauthorized:
+        "Buzz is not authorized to view your contacts"
+      case .fetchFailed:
+        "Buzz failed to fetch your contacts"
+      case .contactNotFound:
+        "Buzz could not find a contact in your contact list"
+      case .saveFailed:
+        "Buzz could not save your contact"
+      }
+    }
   }
 }
 
