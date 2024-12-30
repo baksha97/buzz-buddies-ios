@@ -47,7 +47,7 @@ struct ContactDetailsView: View {
           VStack(alignment: .leading, spacing: 12) {
             
             // MARK: - Avatar, Name + Phone
-            AvatarNameAndPhoneView(contact: contact.contact)
+            ContactAvatarNameAndPhoneView(contact: contact.contact)
             
             // MARK: - Referred By
             ReferredByView(contact: contact, onEditReferrer: {
@@ -129,80 +129,7 @@ struct ContactDetailsView: View {
   }
 }
 
-// MARK: - Subviews
-
-struct AvatarNameAndPhoneView: View {
-  let contact: Contact
-  
-  @Shared(.activeQrConfiguration)
-  var configuration
-  
-  var body: some View {
-    HStack(spacing: 12) {
-      ContactDetailsAvatarView(contact: contact)
-        .frame(width: 60, height: 60)
-      
-      VStack(alignment: .leading, spacing: 6) {
-        Text(contact.fullName)
-          .foregroundColor(configuration.foregroundColor)
-          .font(.title2) // Larger font for name
-          .fontWeight(.bold)
-        
-        if let phoneNumber = contact.phoneNumbers.first {
-          HStack(spacing: 8) {
-            Image(systemName: "phone.fill")
-              .foregroundColor(configuration.foregroundColor)
-            Text(phoneNumber)
-              .foregroundColor(configuration.foregroundColor)
-          }
-          .font(.subheadline)
-        }
-      }
-      Spacer()
-    }
-    .padding()
-    .background(
-      RoundedRectangle(cornerRadius: 12)
-        .fill(configuration.backgroundColor)
-    )
-    .padding(.top, 24)
-  }
-}
-
-fileprivate struct ContactDetailsAvatarView: View {
-  let contact: Contact
-  
-  @Shared(.activeQrConfiguration)
-  var configuration
-  
-  var body: some View {
-    ZStack {
-      Circle()
-        .fill(Color.gray.opacity(0.3))
-        .shadow(radius: 2)
-        .overlay {
-          if let imageData = contact.avatarData, let uiImage = UIImage(data: imageData) {
-            Image(uiImage: uiImage)
-              .resizable()
-              .scaledToFill()
-              .clipShape(Circle())
-          } else if let initials = contact.initials {
-            Text(initials)
-              .font(.headline)
-              .foregroundColor(configuration.backgroundColor.accessibleTextColor)
-              .bold()
-          } else {
-            Image(systemName: "person.circle.fill")
-              .resizable()
-              .scaledToFit()
-              .foregroundColor(configuration.foregroundColor.opacity(0.6))
-          }
-        }
-    }
-  }
-}
-
-struct ReferredByView: View {
+fileprivate struct ReferredByView: View {
   let contact: ContactReferralModel
   
   @Shared(.activeQrConfiguration)
@@ -229,7 +156,7 @@ struct ReferredByView: View {
         Text(contact.referredBy?.fullName ?? "None")
           .foregroundColor(configuration.foregroundColor)
         Button(action: onEditReferrer) {
-          Image(systemName: "pencil")
+          Image(systemName: "pencil.circle.fill")
             .foregroundColor(configuration.foregroundColor)
         }
       }
@@ -242,7 +169,7 @@ struct ReferredByView: View {
   }
 }
 
-struct ReferredContactsView: View {
+fileprivate struct ReferredContactsView: View {
   let referredContacts: [Contact]
   
   @Shared(.activeQrConfiguration)
@@ -330,7 +257,7 @@ struct ReferredContactsView: View {
   }
 }
 
-struct ReferredContactView: View {
+fileprivate struct ReferredContactView: View {
   let contact: Contact
   
   @Shared(.activeQrConfiguration)
@@ -345,7 +272,7 @@ struct ReferredContactView: View {
   
   var body: some View {
     HStack {
-      ContactDetailsAvatarView(contact: contact)
+      ContactAvatarView(contact: contact)
         .frame(width: 32, height: 32)
       
       Text(contact.fullName)
@@ -367,78 +294,28 @@ struct ReferredContactView: View {
 
 // MARK: - SwiftUI Preview
 
-struct ContactDetailsView_Previews: PreviewProvider {
-  static var previews: some View {
+#Preview("Contact Details View") {
     ContactDetailsView(contactId: Contact.mock.id)
-  }
 }
 
-struct NameAndPhoneView_Previews: PreviewProvider {
-  static var previews: some View {
-    AvatarNameAndPhoneView(contact: Contact.mock)
-      .padding()
-  }
-}
-
-struct ReferredByView_Previews: PreviewProvider {
-  static var previews: some View {
-    ReferredByView(
-      contact: ContactReferralModel.mock,
-      onEditReferrer: { /* Mock action */ }
-    )
-  }
-}
-
-struct ReferredContactsView_Previews: PreviewProvider {
-  static var previews: some View {
-    ReferredContactsView(
-      referredContacts: [Contact.mock],
-      onAddReferral: { /* Mock add referral */ },
-      onRemoveReferral: { _ in /* Mock remove referral */ }
-    )
-  }
-}
-
-struct ReferredContactView_Previews: PreviewProvider {
-  static var previews: some View {
-    ReferredContactView(
-      contact: Contact.mock,
-      onRemove: { /* Mock remove action */ }
-    )
-  }
-}
-
-#Preview("ContactDetailsAvatarView with image") {
-  // AvatarView with Image
-  let contactWithImage = Contact(
-    id: UUID().uuidString,
-    givenName: "John",
-    familyName: "Doe",
-    phoneNumbers: ["123-456-7890"],
-    avatarData: UIImage(systemName: "person.fill")?.pngData()
+#Preview("ReferredByView") {
+  ReferredByView(
+    contact: ContactReferralModel.mock,
+    onEditReferrer: { /* Mock action */ }
   )
-  ContactDetailsAvatarView(contact: contactWithImage)
 }
 
-#Preview("ContactDetailsAvatarView contactWithInitials") {
-  // AvatarView with Initials
-  let contactWithInitials = Contact(
-    id: UUID().uuidString,
-    givenName: "John",
-    familyName: "Doe",
-    phoneNumbers: ["123-456-7890"]
+#Preview("ReferredContactsView") {
+  ReferredContactsView(
+    referredContacts: [Contact.mock],
+    onAddReferral: { /* Mock add referral */ },
+    onRemoveReferral: { _ in /* Mock remove referral */ }
   )
-  ContactDetailsAvatarView(contact: contactWithInitials)
-    .padding()
 }
 
-#Preview("ContactDetailsAvatarView withoutInitials") {
-  // ContactDetailsAvatarView with Default Icon
-  let contactWithoutAvatar = Contact(
-    id: UUID().uuidString,
-    givenName: "",
-    familyName: "",
-    phoneNumbers: ["123-456-7890"]
+#Preview("ReferredContactsView") {
+  ReferredContactView(
+    contact: Contact.mock,
+    onRemove: { /* Mock remove action */ }
   )
-  ContactDetailsAvatarView(contact: contactWithoutAvatar)
 }
