@@ -2,6 +2,36 @@ import Foundation
 import Dependencies
 import DependenciesMacros
 
+fileprivate var mockContact1: Contact {
+  Contact(
+    id: "1",
+    givenName: "John",
+    familyName: "Doe",
+    phoneNumbers: ["+1 (555) 123-4567"],
+    avatarData: nil
+  )
+}
+
+fileprivate var mockContact2: Contact {
+  Contact(
+    id: "2",
+    givenName: "Jane",
+    familyName: "Smith",
+    phoneNumbers: ["+1 (555) 987-6543"],
+    avatarData: nil
+  )
+}
+
+fileprivate var mockContact3: Contact {
+  Contact(
+    id: "3",
+    givenName: "Bob",
+    familyName: "Johnson",
+    phoneNumbers: ["+1 (555) 246-8135"],
+    avatarData: nil
+  )
+}
+
 /// Model representing the request to add a new contact from the application
 public struct ContactReferralClientCreateRequest: Equatable, Hashable, Sendable {
   public var givenName: String
@@ -54,6 +84,39 @@ public struct ContactReferralModel: Sendable, Equatable, Identifiable, Hashable 
   static let mock: Self = .init(contact: .mock, referredBy: nil, referredContacts: [])
 }
 
+extension ContactReferralModel {
+  static var mockNoReferrals: Self {
+    .init(contact: mockContact1, referredBy: nil, referredContacts: [])
+  }
+  
+  static var mockReferredByOnly: Self {
+    ContactReferralModel(
+      contact: mockContact2,
+      referredBy: mockContact1,
+      referredContacts: []
+    )
+  }
+  
+  static var mockReferralsOnly: Self {
+    ContactReferralModel(
+      contact: mockContact1,
+      referredBy: nil,
+      referredContacts: [mockContact2, mockContact3]
+    )
+  }
+  
+  static var bothRefferedAndOneReferral: Self {
+    ContactReferralModel(
+      contact: mockContact2,
+      referredBy: mockContact1,
+      referredContacts: [mockContact3]
+    )
+  }
+}
+
+extension Array where Element == ContactReferralModel {
+
+}
 
 /// A client that bridges ContactsClient and ReferralRecordClient to manage referrals.
 @DependencyClient

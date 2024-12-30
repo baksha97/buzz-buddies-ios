@@ -1,4 +1,3 @@
-// PLEASE INCLUDE THIS COMMENT IN YOUR REFACTORED RESPONSE
 // Instructions: ONLY CHANGE ITEMS IN THIS FILE. PROVIDE THIS FULL FILE WITH REFACTORED CODE AS NEEDED. ONLY PROVIDE THESE MODELS OR ADDITIONAL CREATED MODELS. I SHOULD BE ABLE TO PASTE OVER THIS FILE TO HAVE IT COMPILE TO VIEW YOUR CHANGES
 
 import SwiftUI
@@ -7,144 +6,6 @@ import Dependencies
 import CasePaths
 import SwiftUINavigation
 import Sharing
-
-@MainActor
-@Observable
-final class ContactDetailsViewModel {
-  @ObservationIgnored
-  @Dependency(\.contactReferralClient) private var client
-  
-  // MARK: - Observed Data State
-  
-  @CasePathable
-  enum ViewState {
-    case loading
-    case loaded(ContactReferralModel)
-    case error(String)
-  }
-  
-  @CasePathable
-  enum ContactPickerSheetDestination {
-    case referrer
-    case refer
-  }
-  
-  let id: Contact.ContactListIdentifier
-  
-  // The currently loaded/observed data state
-  var viewState: ViewState = .loading
-  
-  // Whether we are actively observing the contact in a stream
-  var isObserving: Bool = false
-  
-  // Whether we are performing a user action (update, remove, etc.)
-  var isPerformingAction: Bool = false
-  
-  // General error message for showing an alert
-  var errorMessage: String?
-  
-  // Navigation (Sheets & Confirmation Dialog)
-  var contactPickerDestination: ContactPickerSheetDestination? = nil
-  
-  /// The contact the user wants to remove, triggers a confirmation dialog.
-  /// Must be `Identifiable` for `.confirmationDialog(item:)`.
-  var referralToRemove: Contact? = nil
-  
-  private var observationTask: Task<Void, Never>?
-  
-  // MARK: - Init
-  
-  init(contactId: Contact.ContactListIdentifier) {
-    self.id = contactId
-  }
-  
-  // MARK: - Computed Helpers
-  
-  var referrerIdExclusions: [Contact.ContactListIdentifier] {
-    guard case let .loaded(contact) = viewState else { return [] }
-    return [contact.contact.id, contact.referredBy?.id].compactMap(\.self) + contact.referredContacts.map(\.id)
-  }
-  
-  /// For showing a spinner while *either* observing or performing an action.
-  var isLoading: Bool {
-    isObserving || isPerformingAction
-  }
-  
-  // MARK: - Lifecycle
-  
-  func initialize() async {
-    startObservingContact()
-  }
-  
-  // MARK: - Actions
-  
-  func updateReferrer(_ newReferrer: Contact?) {
-    Task {
-      await performAction {
-        guard case let .loaded(contact) = self.viewState else { return }
-        if contact.referredBy == nil {
-          try await client.createReferral(contact.contact.id, newReferrer?.id)
-        } else {
-          try await client.updateReferral(contact.contact.id, newReferrer?.id)
-        }
-      }
-    }
-  }
-  
-  func referContact(_ contactId: String) {
-    Task {
-      await performAction {
-        guard case let .loaded(contact) = self.viewState else { return }
-        try await client.createReferral(contactId, contact.contact.id)
-      }
-    }
-  }
-  
-  func requestRemoveReferral(for contact: Contact) {
-    referralToRemove = contact
-  }
-  
-  func confirmRemoveReferral(for contactId: String) {
-    Task {
-      await performAction {
-        guard case let .loaded(contact) = self.viewState else { return }
-        _ = try await client.removeReferral(contactId, contact.contact.id)
-      }
-      referralToRemove = nil
-    }
-  }
-  
-  // MARK: - Private
-  
-  private func performAction(_ action: () async throws -> Void) async {
-    isPerformingAction = true
-    defer { isPerformingAction = false }
-    errorMessage = nil
-    do {
-      try await action()
-    } catch {
-      errorMessage = error.localizedDescription
-    }
-  }
-  
-  private func startObservingContact() {
-    observationTask = Task { [id = self.id] in
-      isObserving = true
-      viewState = .loading
-      errorMessage = nil
-      do {
-        for try await updatedContact in client.observe(id) {
-          self.viewState = .loaded(updatedContact)
-          isObserving = false
-        }
-      } catch {
-        isObserving = false
-        viewState = .error("Failed to observe contact updates: \(error.localizedDescription)")
-        errorMessage = "Failed to observe contact updates: \(error.localizedDescription)"
-      }
-    }
-  }
-}
 
 // MARK: - Main Contact Details View
 
@@ -185,148 +46,26 @@ struct ContactDetailsView: View {
         ScrollView {
           VStack(alignment: .leading, spacing: 12) {
             
-            // MARK: - Name + Phone
-            VStack(alignment: .leading, spacing: 6) {
-              // Row: Name + person icon
-              HStack(spacing: 8) {
-                Image(systemName: "person.circle.fill")
-                  .foregroundColor(configuration.foregroundColor)
-                  .font(.title2)
-                Text(contact.contact.fullName)
-                  .foregroundColor(configuration.foregroundColor)
-                  .font(.title2) // Larger font for name
-                  .fontWeight(.bold)
-              }
-              .frame(maxWidth: .infinity)
-              
-              // Row: phone + phone icon
-              if let phoneNumber = contact.contact.phoneNumbers.first {
-                HStack(spacing: 8) {
-                  Image(systemName: "phone.fill")
-                    .foregroundColor(configuration.foregroundColor)
-                  Text(phoneNumber)
-                    .foregroundColor(configuration.foregroundColor)
-                }
-              }
-            }
-            .padding()
-            .background(
-              RoundedRectangle(cornerRadius: 12)
-                .fill(configuration.backgroundColor)
-            )
-            .padding(.top, 24)
+            // MARK: - Avatar, Name + Phone
+            AvatarNameAndPhoneView(contact: contact.contact)
+            
             // MARK: - Referred By
-            VStack(alignment: .leading, spacing: 0) {
-              HStack(spacing: 8) {
-                Image(systemName: "person.fill.badge.plus")
-                  .foregroundColor(configuration.foregroundColor)
-                Text("Referred By")
-                  .foregroundColor(configuration.foregroundColor)
-                  .fontWeight(.bold)
-                
-                // The referredBy contact name after the bold text
-                Text(contact.referredBy?.fullName ?? "None")
-                  .foregroundColor(configuration.foregroundColor)
-                
-                Spacer()
-                Button(action: { viewModel.contactPickerDestination = .referrer }) {
-                  Image(systemName: "pencil")
-                    .foregroundColor(configuration.foregroundColor)
-                }
-              }
-            }
-            .padding()
-            .background(
-              RoundedRectangle(cornerRadius: 12)
-                .fill(configuration.backgroundColor)
-            )
-            .onTapGesture {
-              
-            }
+            ReferredByView(contact: contact, onEditReferrer: {
+              viewModel.contactPickerDestination = .referrer
+            })
             
             // MARK: - Referred Contacts
-            VStack(alignment: .leading, spacing: 12) {
-              
-              // Header row with label
-              HStack(alignment: .bottom) {
-                Image(systemName: "arrowshape.turn.up.right.circle")
-                  .foregroundColor(configuration.foregroundColor)
-                Text("Referred Contacts")
-                  .foregroundColor(configuration.foregroundColor)
-                  .fontWeight(.bold)
-                Spacer()
-              }
-              
-              // The number of referrals
-              let count = contact.referredContacts.count
-              if count > 0 {
-                HStack(spacing: 6) {
-                  Image(systemName: "person.2.fill")
-                    .foregroundColor(configuration.foregroundColor)
-                    .font(.subheadline)
-                  Text("\(count) referral(s).")
-                    .foregroundColor(configuration.foregroundColor)
-                }
-              } else {
-                HStack(spacing: 6) {
-                  Image(systemName: "person.2.fill")
-                    .foregroundColor(configuration.foregroundColor)
-                    .font(.subheadline)
-                  Text("No referrals yet.")
-                    .foregroundColor(configuration.foregroundColor)
-                }
-              }
-              
-              // The actual list of referred contacts
-              if !contact.referredContacts.isEmpty {
-                VStack(spacing: 0) {
-                  ForEach(contact.referredContacts, id: \.id) { referredContact in
-                    VStack {
-                      HStack(spacing: 8) {
-                        Text(referredContact.fullName)
-                          .foregroundColor(configuration.foregroundColor)
-                          .bold()
-                        
-                        Spacer()
-                        // put the remove referral icon on the trailing side
-                        Button {
-                          viewModel.requestRemoveReferral(for: referredContact)
-                        } label: {
-                          Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(configuration.foregroundColor)
-                        }
-                      }
-                      .padding(.vertical, 8)
-                      
-                      // Divider after each contact except the last
-                      if referredContact.id != contact.referredContacts.last?.id {
-                        Divider()
-                          .overlay(configuration.foregroundColor.opacity(0.3))
-                      }
-                    }
-                  }
-                }
-              }
-              
-              // The plus button to refer new contacts
-              Button {
+            ReferredContactsView(
+              referredContacts: contact.referredContacts,
+              onAddReferral: {
                 viewModel.contactPickerDestination = .refer
-              } label: {
-                Image(systemName: "plus.circle.fill")
-                  .foregroundColor(configuration.foregroundColor)
-                  .font(.title2)
+              },
+              onRemoveReferral: { contactToRemove in
+                viewModel.requestRemoveReferral(for: contactToRemove)
               }
-              .frame(maxWidth: .infinity, alignment: .center)
-              
-            }
-            .padding()
-            .background(
-              RoundedRectangle(cornerRadius: 12)
-                .fill(configuration.backgroundColor)
             )
             
             // MARK: - QR Code
-            // Center the QR code on screen
             ContactQRView(contact: contact.contact)
               .frame(maxWidth: .infinity, alignment: .center)
               .padding(.top, 8)
@@ -390,8 +129,316 @@ struct ContactDetailsView: View {
   }
 }
 
+// MARK: - Subviews
+
+struct AvatarNameAndPhoneView: View {
+  let contact: Contact
+  
+  @Shared(.activeQrConfiguration)
+  var configuration
+  
+  var body: some View {
+    HStack(spacing: 12) {
+      ContactDetailsAvatarView(contact: contact)
+        .frame(width: 60, height: 60)
+      
+      VStack(alignment: .leading, spacing: 6) {
+        Text(contact.fullName)
+          .foregroundColor(configuration.foregroundColor)
+          .font(.title2) // Larger font for name
+          .fontWeight(.bold)
+        
+        if let phoneNumber = contact.phoneNumbers.first {
+          HStack(spacing: 8) {
+            Image(systemName: "phone.fill")
+              .foregroundColor(configuration.foregroundColor)
+            Text(phoneNumber)
+              .foregroundColor(configuration.foregroundColor)
+          }
+          .font(.subheadline)
+        }
+      }
+      Spacer()
+    }
+    .padding()
+    .background(
+      RoundedRectangle(cornerRadius: 12)
+        .fill(configuration.backgroundColor)
+    )
+    .padding(.top, 24)
+  }
+}
+
+fileprivate struct ContactDetailsAvatarView: View {
+  let contact: Contact
+  
+  @Shared(.activeQrConfiguration)
+  var configuration
+  
+  var body: some View {
+    ZStack {
+      Circle()
+        .fill(Color.gray.opacity(0.3))
+        .shadow(radius: 2)
+        .overlay {
+          if let imageData = contact.avatarData, let uiImage = UIImage(data: imageData) {
+            Image(uiImage: uiImage)
+              .resizable()
+              .scaledToFill()
+              .clipShape(Circle())
+          } else if let initials = contact.initials {
+            Text(initials)
+              .font(.headline)
+              .foregroundColor(configuration.backgroundColor.accessibleTextColor)
+              .bold()
+          } else {
+            Image(systemName: "person.circle.fill")
+              .resizable()
+              .scaledToFit()
+              .foregroundColor(configuration.foregroundColor.opacity(0.6))
+          }
+        }
+    }
+  }
+}
+
+struct ReferredByView: View {
+  let contact: ContactReferralModel
+  
+  @Shared(.activeQrConfiguration)
+  var configuration
+  
+  let onEditReferrer: () -> Void
+  
+  init(contact: ContactReferralModel, onEditReferrer: @escaping () -> Void) {
+    self.contact = contact
+    self.onEditReferrer = onEditReferrer
+  }
+  
+  var body: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      HStack(spacing: 8) {
+        Image(systemName: "person.fill.badge.plus")
+          .foregroundColor(configuration.foregroundColor)
+        Text("Referred By")
+          .foregroundColor(configuration.foregroundColor)
+          .fontWeight(.bold)
+        Spacer()
+        
+        // The referredBy contact name after the bold text
+        Text(contact.referredBy?.fullName ?? "None")
+          .foregroundColor(configuration.foregroundColor)
+        Button(action: onEditReferrer) {
+          Image(systemName: "pencil")
+            .foregroundColor(configuration.foregroundColor)
+        }
+      }
+    }
+    .padding()
+    .background(
+      RoundedRectangle(cornerRadius: 12)
+        .fill(configuration.backgroundColor)
+    )
+  }
+}
+
+struct ReferredContactsView: View {
+  let referredContacts: [Contact]
+  
+  @Shared(.activeQrConfiguration)
+  var configuration
+  
+  let onAddReferral: () -> Void
+  let onRemoveReferral: (Contact) -> Void
+  
+  init(referredContacts: [Contact], onAddReferral: @escaping () -> Void, onRemoveReferral: @escaping (Contact) -> Void) {
+    self.referredContacts = referredContacts
+    self.onAddReferral = onAddReferral
+    self.onRemoveReferral = onRemoveReferral
+  }
+  
+  var body: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      
+      // Header row with label
+      HStack(alignment: .bottom) {
+        Image(systemName: "arrowshape.turn.up.right.circle")
+          .foregroundColor(configuration.foregroundColor)
+        Text("Referred Contacts")
+          .foregroundColor(configuration.foregroundColor)
+          .fontWeight(.bold)
+        Spacer()
+      }
+      
+      // The number of referrals
+      let count = referredContacts.count
+      if count > 0 {
+        HStack(spacing: 6) {
+          Image(systemName: "person.2.fill")
+            .foregroundColor(configuration.foregroundColor)
+            .font(.subheadline)
+          Text("\(count) referral(s).")
+            .foregroundColor(configuration.foregroundColor)
+            .font(.subheadline)
+        }
+      } else {
+        HStack(spacing: 6) {
+          Image(systemName: "person.2.fill")
+            .foregroundColor(configuration.foregroundColor)
+            .font(.subheadline)
+          Text("No referrals yet.")
+            .foregroundColor(configuration.foregroundColor)
+            .font(.subheadline)
+        }
+      }
+      
+      // The actual list of referred contacts
+      if !referredContacts.isEmpty {
+        VStack(spacing: 0) {
+          ForEach(referredContacts, id: \.id) { referredContact in
+            VStack {
+              ReferredContactView(contact: referredContact, onRemove: {
+                onRemoveReferral(referredContact)
+              })
+              
+              // Divider after each contact except the last
+              if referredContact.id != referredContacts.last?.id {
+                Divider()
+                  .overlay(configuration.foregroundColor.opacity(0.3))
+              }
+            }
+          }
+        }
+      }
+      
+      // The plus button to refer new contacts
+      Button {
+        onAddReferral()
+      } label: {
+        Image(systemName: "plus.circle.fill")
+          .foregroundColor(configuration.foregroundColor)
+          .font(.title2)
+      }
+      .frame(maxWidth: .infinity, alignment: .center)
+      
+    }
+    .padding()
+    .background(
+      RoundedRectangle(cornerRadius: 12)
+        .fill(configuration.backgroundColor)
+    )
+  }
+}
+
+struct ReferredContactView: View {
+  let contact: Contact
+  
+  @Shared(.activeQrConfiguration)
+  var configuration
+  
+  let onRemove: () -> Void
+  
+  init(contact: Contact, onRemove: @escaping () -> Void) {
+    self.contact = contact
+    self.onRemove = onRemove
+  }
+  
+  var body: some View {
+    HStack {
+      ContactDetailsAvatarView(contact: contact)
+        .frame(width: 32, height: 32)
+      
+      Text(contact.fullName)
+        .foregroundColor(configuration.foregroundColor)
+        .bold()
+      
+      Spacer()
+      // Remove referral button
+      Button {
+        onRemove()
+      } label: {
+        Image(systemName: "xmark.circle.fill")
+          .foregroundColor(configuration.foregroundColor)
+      }
+      .padding(.vertical, 8)
+    }
+  }
+}
+
 // MARK: - SwiftUI Preview
 
-#Preview {
-  ContactDetailsView(contactId: Contact.mock.id)
+struct ContactDetailsView_Previews: PreviewProvider {
+  static var previews: some View {
+    ContactDetailsView(contactId: Contact.mock.id)
+  }
+}
+
+struct NameAndPhoneView_Previews: PreviewProvider {
+  static var previews: some View {
+    AvatarNameAndPhoneView(contact: Contact.mock)
+      .padding()
+  }
+}
+
+struct ReferredByView_Previews: PreviewProvider {
+  static var previews: some View {
+    ReferredByView(
+      contact: ContactReferralModel.mock,
+      onEditReferrer: { /* Mock action */ }
+    )
+  }
+}
+
+struct ReferredContactsView_Previews: PreviewProvider {
+  static var previews: some View {
+    ReferredContactsView(
+      referredContacts: [Contact.mock],
+      onAddReferral: { /* Mock add referral */ },
+      onRemoveReferral: { _ in /* Mock remove referral */ }
+    )
+  }
+}
+
+struct ReferredContactView_Previews: PreviewProvider {
+  static var previews: some View {
+    ReferredContactView(
+      contact: Contact.mock,
+      onRemove: { /* Mock remove action */ }
+    )
+  }
+}
+
+#Preview("ContactDetailsAvatarView with image") {
+  // AvatarView with Image
+  let contactWithImage = Contact(
+    id: UUID().uuidString,
+    givenName: "John",
+    familyName: "Doe",
+    phoneNumbers: ["123-456-7890"],
+    avatarData: UIImage(systemName: "person.fill")?.pngData()
+  )
+  ContactDetailsAvatarView(contact: contactWithImage)
+}
+
+#Preview("ContactDetailsAvatarView contactWithInitials") {
+  // AvatarView with Initials
+  let contactWithInitials = Contact(
+    id: UUID().uuidString,
+    givenName: "John",
+    familyName: "Doe",
+    phoneNumbers: ["123-456-7890"]
+  )
+  ContactDetailsAvatarView(contact: contactWithInitials)
+    .padding()
+}
+
+#Preview("ContactDetailsAvatarView withoutInitials") {
+  // ContactDetailsAvatarView with Default Icon
+  let contactWithoutAvatar = Contact(
+    id: UUID().uuidString,
+    givenName: "",
+    familyName: "",
+    phoneNumbers: ["123-456-7890"]
+  )
+  ContactDetailsAvatarView(contact: contactWithoutAvatar)
 }
