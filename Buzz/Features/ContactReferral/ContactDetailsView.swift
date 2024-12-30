@@ -6,7 +6,6 @@ import SwiftUINavigation
 
 struct ContactDetailFormState {
   var referredBy: Contact?
-  var referrals: [Contact]
 }
 
 @MainActor
@@ -45,7 +44,7 @@ final class ContactDetailsViewModel {
   var errorMessage: String?
   
   // MARK: - Form State
-  var formState: ContactDetailFormState = .init(referrals: [])
+  var formState: ContactDetailFormState = .init()
   
   // MARK: - Navigation (Sheets & Confirmation Dialog)
   var contactPickerDestination: ContactPickerSheetDestination? = nil
@@ -156,7 +155,6 @@ final class ContactDetailsViewModel {
       do {
         for try await updatedContact in client.observe(id) {
           self.formState.referredBy = updatedContact.referredBy
-          self.formState.referrals = updatedContact.referredContacts
           self.viewState = .loaded(updatedContact)
           isObserving = false
         }
@@ -214,7 +212,7 @@ struct ContactDetailsView: View {
       .confirmationDialog(
         item: $viewModel.referralToRemove,
         titleVisibility: .hidden,
-        title: { Text("Removing \($0.fullName)") },
+        title: { Text("Removing \($0.fullName )") },
         actions: { contact in
           Button("Remove \(contact.fullName)", role: .destructive) {
             viewModel.confirmRemoveReferral(for: contact.id)
@@ -306,27 +304,33 @@ struct ContactDetailsView: View {
       Button("Add Referral") {
         viewModel.contactPickerDestination = .refer
       }
-      if !viewModel.formState.referrals.isEmpty {
-        ForEach(viewModel.formState.referrals, id: \.id) { referredContact in
-          HStack {
-            Text(referredContact.fullName)
-            Spacer()
-            Text("Referred")
-              .foregroundColor(.secondary)
-            Button {
-              viewModel.requestRemoveReferral(for: referredContact)
-            } label: {
-              Image(systemName: "xmark")
-                .font(.system(size: 12))
-                .background(Color.red.opacity(0.1))
-                .foregroundColor(.red)
+      if case let .loaded(contact) = viewModel.viewState {
+        if !contact.referredContacts.isEmpty {
+          ForEach(contact.referredContacts, id: \.id) { referredContact in
+            HStack {
+              Text(referredContact.fullName)
+              Spacer()
+              Text("Referred")
+                .foregroundColor(.secondary)
+              Button {
+                viewModel.requestRemoveReferral(for: referredContact)
+              } label: {
+                Image(systemName: "xmark")
+                  .font(.system(size: 12))
+                  .background(Color.red.opacity(0.1))
+                  .foregroundColor(.red)
+              }
             }
           }
         }
+        else {
+          Text("No referrals made yet")
+            .foregroundColor(.secondary)
+        }
       } else {
-        Text("No referrals made yet")
-          .foregroundColor(.secondary)
+        ProgressView()
       }
+      
     }
   }
 }
